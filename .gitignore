@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtualenv
+venv/
+.env/
+
+# Django
+*.log
+db.sqlite3
+media/
+staticfiles/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Playwright / scraping
+playwright-profile/
+
+# arquivos gerados
+*.json
+
+# ignora tudo dentro de data
+data/*
+
+# mas permite diretórios
+!data/*/
+
+# permite os arquivos de estrutura
+!data/.gitkeep
+!data/*/.gitkeep

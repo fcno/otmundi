@@ -1,0 +1,42 @@
+[tool.black]
+line-length = 88
+target-version = ["py312"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+# regras habilitadas
+lint.select = [
+    "E",   # erros PEP8
+    "F",   # erros lógicos
+    "I",   # import sort (isort)
+    "UP",  # melhorias modernas (pyupgrade)
+]
+
+# ignorar conflitos com black
+lint.ignore = [
+    "E501"  # linha longa (black já resolve)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["worlds", "monsters", "snapshots", "killstats"]
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["mypy_django_plugin.main"]
+
+strict = true
+
+ignore_missing_imports = true
+
+disallow_untyped_defs = true
+disallow_untyped_calls = true
+
+[tool.django-stubs]
+django_settings_module = "config.settings"
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "0.1.0"
+tag_format = "v$version"
