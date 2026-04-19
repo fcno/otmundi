@@ -1,16 +1,19 @@
+import pytest
 from django.db.utils import IntegrityError
-from django.test import TestCase
 
 from monsters.models.monster import Monster
 
 
-class MonsterModelTest(TestCase):
+@pytest.mark.django_db
+def test_create_monster() -> None:
+    monster = Monster.objects.create(name="Dragon")
 
-    def test_create_monster(self) -> None:
-        monster = Monster.objects.create(name="Dragon")
-        self.assertEqual(monster.name, "Dragon")
+    assert monster.name == "Dragon"
 
-    def test_unique_name(self) -> None:
+
+@pytest.mark.django_db
+def test_unique_name() -> None:
+    Monster.objects.create(name="Dragon")
+
+    with pytest.raises(IntegrityError):
         Monster.objects.create(name="Dragon")
-        with self.assertRaises(IntegrityError):
-            Monster.objects.create(name="Dragon")

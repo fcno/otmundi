@@ -1,24 +1,27 @@
-from django.test import SimpleTestCase
-from ingestion.services.validators.strings import validate_string
+import pytest
+
 from ingestion.services.validators.base import ValidationError
+from ingestion.services.validators.strings import validate_string
 
 
-class ValidateStringTest(SimpleTestCase):
+def test_valid_string() -> None:
+    validate_string("Dragon")
 
-    def test_valid_string(self) -> None:
-        validate_string("Dragon")
 
-    def test_optional_none(self) -> None:
-        validate_string(None, required=False)
+def test_optional_none() -> None:
+    validate_string(None, required=False)
 
-    def test_empty_required(self) -> None:
-        with self.assertRaises(ValidationError):
-            validate_string("")
 
-    def test_none_required(self) -> None:
-        with self.assertRaises(ValidationError):
-            validate_string(None)
+def test_empty_required() -> None:
+    with pytest.raises(ValidationError):
+        validate_string("")
 
-    def test_not_string(self) -> None:
-        with self.assertRaises(ValidationError):
-            validate_string(123)
+
+def test_none_required() -> None:
+    with pytest.raises(ValidationError):
+        validate_string(None)
+
+
+def test_not_string() -> None:
+    with pytest.raises(ValidationError):
+        validate_string(123)

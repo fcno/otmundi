@@ -11,7 +11,7 @@ mypy .
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "Testes..."
-python manage.py test
+pytest
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "Projeto validado com sucesso!"

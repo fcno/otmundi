@@ -1,38 +1,41 @@
+import pytest
 from django.db.utils import IntegrityError
-from django.test import TestCase
 from django.utils.timezone import now
 
 from snapshots.models.snapshot import Snapshot
 from worlds.models.world import World
 
 
-class SnapshotModelTest(TestCase):
+@pytest.mark.django_db
+def test_create_snapshot() -> None:
+    world = World.objects.create(external_id="22", name="Serenian")
+    ts = now()
 
-    def setUp(self) -> None:
-        self.world = World.objects.create(external_id="22", name="Serenian")
+    snapshot = Snapshot.objects.create(
+        world=world,
+        captured_at=ts,
+        source_file="file.json",
+    )
 
-    def test_create_snapshot(self) -> None:
-        snapshot = Snapshot.objects.create(
-            snapshot_id="snap1",
-            world=self.world,
-            captured_at=now(),
-            source_file="file.json",
-        )
+    assert snapshot.world == world
+    assert snapshot.captured_at == ts
+    assert snapshot.source_file == "file.json"
 
-        self.assertEqual(snapshot.world.name, "Serenian")
 
-    def test_unique_snapshot_id(self) -> None:
+@pytest.mark.django_db
+def test_unique_world_datetime() -> None:
+    world = World.objects.create(external_id="22", name="Serenian")
+    ts = now()
+
+    Snapshot.objects.create(
+        world=world,
+        captured_at=ts,
+        source_file="file.json",
+    )
+
+    with pytest.raises(IntegrityError):
         Snapshot.objects.create(
-            snapshot_id="snap1",
-            world=self.world,
-            captured_at=now(),
-            source_file="file.json",
+            world=world,
+            captured_at=ts,
+            source_file="file2.json",
         )
-
-        with self.assertRaises(IntegrityError):
-            Snapshot.objects.create(
-                snapshot_id="snap1",
-                world=self.world,
-                captured_at=now(),
-                source_file="file2.json",
-            )
