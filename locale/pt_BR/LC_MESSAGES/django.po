@@ -1,0 +1,30 @@
+msgid ""
+msgstr ""
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-04-19 14:33-0300\n"
+"Language: pt_BR\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+#: .\ingestion\services\validators\datetime.py:12
+msgid "Datetime must be a string"
+msgstr "Data/hora deve ser uma string"
+
+#: .\ingestion\services\validators\datetime.py:17
+msgid "Invalid datetime"
+msgstr "Formato de data/hora inválido"
+
+#: .\ingestion\services\validators\integers.py:12
+msgid "Value must be an integer"
+msgstr "Valor deve ser um inteiro"
+
+#: .\ingestion\services\validators\strings.py:8
+msgid "Value is required"
+msgstr "Valor é obrigatório"
+
+#: .\ingestion\services\validators\strings.py:12
+msgid "Value must be a string"
+msgstr "Valor deve ser uma string"
+
+#: .\ingestion\services\validators\strings.py:15
+msgid "Value cannot be empty"
+msgstr "Valor não pode ser vazio"

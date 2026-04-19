@@ -1,15 +1,12 @@
-from typing import Any
-
+from django.utils.translation import gettext_lazy as _
 from .base import ValidationError
 
 
-def validate_integer(value: Any) -> None:
-
+def validate_integer(value: object) -> None:
     if isinstance(value, int):
         return
 
-    if isinstance(value, str):
-        if value.isdigit():
-            return
+    if isinstance(value, str) and value.isdigit():
+        return
 
-    raise ValidationError(f"Invalid integer value: {value}")
+    raise ValidationError(_("Value must be an integer"))
