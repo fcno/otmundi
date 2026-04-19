@@ -11,5 +11,5 @@ def validate_string(value: object, required: bool = True) -> None:
     if not isinstance(value, str):
         raise ValidationError(_("Value must be a string"))
 
-    if required and value == "":
+    if required and value.strip() == "":
         raise ValidationError(_("Value cannot be empty"))

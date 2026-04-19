@@ -16,6 +16,10 @@ def test_empty_required() -> None:
     with pytest.raises(ValidationError):
         validate_string("")
 
+def test_string_with_spaces_only_invalid() -> None:
+    with pytest.raises(ValidationError):
+        validate_string("     ")
+
 
 def test_none_required() -> None:
     with pytest.raises(ValidationError):
