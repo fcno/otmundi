@@ -1,7 +1,7 @@
 import pytest
 
-from ingestion.services.validators.base import ValidationError
-from ingestion.services.validators.datetime import validate_datetime
+from core.validators.base import ValidationError
+from core.validators.datetime import validate_datetime
 
 
 def test_valid_iso() -> None:

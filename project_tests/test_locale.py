@@ -1,7 +1,7 @@
 import pytest
 
-from ingestion.services.validators.base import ValidationError
-from ingestion.services.validators.integers import validate_integer
+from core.validators.base import ValidationError
+from core.validators.integers import validate_integer
 from django.utils.translation import activate
 
 def test_error_in_english() -> None:

@@ -1,7 +1,7 @@
 import pytest
 
-from ingestion.services.validators.base import ValidationError
-from ingestion.services.validators.strings import validate_string
+from core.validators.base import ValidationError
+from core.validators.strings import validate_string
 
 
 def test_valid_string() -> None:
