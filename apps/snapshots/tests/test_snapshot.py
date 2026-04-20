@@ -2,8 +2,8 @@ import pytest
 from django.db.utils import IntegrityError
 from django.utils.timezone import now
 
-from snapshots.models.snapshot import Snapshot
-from worlds.models.world import World
+from apps.snapshots.models.snapshot import Snapshot
+from apps.worlds.models.world import World
 
 
 @pytest.mark.django_db

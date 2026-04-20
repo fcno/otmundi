@@ -1,7 +1,7 @@
 import pytest
 from django.db.utils import IntegrityError
 
-from worlds.models.world import World
+from apps.worlds.models.world import World
 
 
 @pytest.mark.django_db

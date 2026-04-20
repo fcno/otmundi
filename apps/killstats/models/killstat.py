@@ -1,7 +1,7 @@
 from django.db import models
 
-from monsters.models.monster import Monster
-from snapshots.models.snapshot import Snapshot
+from apps.monsters.models.monster import Monster
+from apps.snapshots.models.snapshot import Snapshot
 
 
 class KillStat(models.Model):

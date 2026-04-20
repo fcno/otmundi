@@ -37,10 +37,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "killstats",
-    "monsters",
-    "snapshots",
-    "worlds",
+    "apps.core",
+    "apps.ingestion",
+    "apps.killstats",
+    "apps.monsters",
+    "apps.snapshots",
+    "apps.worlds",
     "rest_framework",
 ]
 

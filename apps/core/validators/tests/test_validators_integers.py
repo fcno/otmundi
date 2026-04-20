@@ -1,7 +1,7 @@
 import pytest
 
-from core.validators.base import ValidationError
-from core.validators.integers import validate_integer
+from apps.core.validators.base import ValidationError
+from apps.core.validators.integers import validate_integer
 
 
 def test_valid_int() -> None:

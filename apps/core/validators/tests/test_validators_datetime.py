@@ -1,7 +1,7 @@
 import pytest
 
-from core.validators.base import ValidationError
-from core.validators.datetime import validate_datetime
+from apps.core.validators.base import ValidationError
+from apps.core.validators.datetime import validate_datetime
 
 
 def test_valid_iso() -> None:

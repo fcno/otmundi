@@ -1,7 +1,7 @@
 import pytest
 
-from core.validators.base import ValidationError
-from core.validators.strings import validate_string
+from apps.core.validators.base import ValidationError
+from apps.core.validators.strings import validate_string
 
 
 def test_valid_string() -> None:
@@ -15,6 +15,7 @@ def test_optional_none() -> None:
 def test_empty_required() -> None:
     with pytest.raises(ValidationError):
         validate_string("")
+
 
 def test_string_with_spaces_only_invalid() -> None:
     with pytest.raises(ValidationError):

@@ -1,8 +1,9 @@
 import pytest
-
-from core.validators.base import ValidationError
-from core.validators.integers import validate_integer
 from django.utils.translation import activate
+
+from apps.core.validators.base import ValidationError
+from apps.core.validators.integers import validate_integer
+
 
 def test_error_in_english() -> None:
     activate("en")

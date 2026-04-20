@@ -1,7 +1,7 @@
 import pytest
 from django.db.utils import IntegrityError
 
-from monsters.models.monster import Monster
+from apps.monsters.models.monster import Monster
 
 
 @pytest.mark.django_db

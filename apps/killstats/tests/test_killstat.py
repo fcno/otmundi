@@ -2,10 +2,10 @@ import pytest
 from django.db.utils import IntegrityError
 from django.utils.timezone import now
 
-from killstats.models.killstat import KillStat
-from monsters.models.monster import Monster
-from snapshots.models.snapshot import Snapshot
-from worlds.models.world import World
+from apps.killstats.models.killstat import KillStat
+from apps.monsters.models.monster import Monster
+from apps.snapshots.models.snapshot import Snapshot
+from apps.worlds.models.world import World
 
 
 @pytest.mark.django_db

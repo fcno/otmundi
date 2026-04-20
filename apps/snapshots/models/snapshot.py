@@ -1,6 +1,6 @@
 from django.db import models
 
-from worlds.models.world import World
+from apps.worlds.models.world import World
 
 
 class Snapshot(models.Model):
