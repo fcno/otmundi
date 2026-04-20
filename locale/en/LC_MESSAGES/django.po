@@ -1,30 +1,38 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-19 14:33-0300\n"
+"POT-Creation-Date: 2026-04-20 04:22-0300\n"
 "Language: en\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
-#: .\ingestion\services\validators\datetime.py:12
+#: .\apps\core\normalizers\datetime.py:11
+msgid "Datetime normalization failed"
+msgstr "Datetime normalization failed"
+
+#: .\apps\core\validators\datetime.py:12
 msgid "Datetime must be a string"
 msgstr "Datetime must be a string"
 
-#: .\ingestion\services\validators\datetime.py:17
+#: .\apps\core\validators\datetime.py:17
 msgid "Invalid datetime"
 msgstr "Invalid datetime format"
 
-#: .\ingestion\services\validators\integers.py:12
+#: .\apps\core\validators\datetime.py:20
+msgid "Datetime must include timezone"
+msgstr "Datetime must include timezone"
+
+#: .\apps\core\validators\integers.py:13
 msgid "Value must be an integer"
 msgstr "Value must be an integer"
 
-#: .\ingestion\services\validators\strings.py:8
+#: .\apps\core\validators\strings.py:9
 msgid "Value is required"
 msgstr "Value is required"
 
-#: .\ingestion\services\validators\strings.py:12
+#: .\apps\core\validators\strings.py:13
 msgid "Value must be a string"
 msgstr "Value must be a string"
 
-#: .\ingestion\services\validators\strings.py:15
+#: .\apps\core\validators\strings.py:16
 msgid "Value cannot be empty"
 msgstr "Value cannot be empty"
