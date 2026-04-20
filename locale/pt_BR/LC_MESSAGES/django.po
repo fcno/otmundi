@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-20 04:22-0300\n"
+"POT-Creation-Date: 2026-04-20 04:46-0300\n"
 "Language: pt_BR\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -24,6 +24,11 @@ msgstr "Data/hora deve incluir o timezone"
 #: .\apps\core\validators\integers.py:13
 msgid "Value must be an integer"
 msgstr "Valor deve ser um inteiro"
+
+#: .\apps\core\validators\required.py:11
+#, python-brace-format
+msgid "The field '{field}' is required."
+msgstr "O campo '{field}' é obrigatório."
 
 #: .\apps\core\validators\strings.py:9
 msgid "Value is required"
