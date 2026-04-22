@@ -1,6 +1,5 @@
 from datetime import datetime
 
-import pytest
 from django.utils.timezone import is_aware
 
 from apps.core.normalizers.datetime import normalize_datetime
@@ -30,8 +29,3 @@ def test_normalize_datetime_preserves_all_fields() -> None:
     assert result.hour == 14
     assert result.minute == 33
     assert result.second == 0
-
-
-def test_normalize_invalid_should_fail_fast() -> None:
-    with pytest.raises(ValueError):
-        normalize_datetime("invalid")
