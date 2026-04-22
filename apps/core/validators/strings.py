@@ -1,16 +1,20 @@
+# apps/core/validators/strings.py
 from django.utils.translation import gettext_lazy as _
 
 from .base import ValidationError
+from .types import Validator
 
 
-def validate_string(value: object, required: bool = True) -> None:
-    if value is None:
-        if required:
-            raise ValidationError(_("Value is required"))
-        return
+def validate_string(*, field: str) -> Validator:
+    def _validator(value: object) -> None:
+        if not isinstance(value, str):
+            raise ValidationError(
+                _("The field '{field}' must be a string.").format(field=field)
+            )
 
-    if not isinstance(value, str):
-        raise ValidationError(_("Value must be a string"))
+        if value.strip() == "":
+            raise ValidationError(
+                _("The field '{field}' cannot be empty.").format(field=field)
+            )
 
-    if required and value.strip() == "":
-        raise ValidationError(_("Value cannot be empty"))
+    return _validator

@@ -1,3 +1,4 @@
+# apps/core/validators/tests/test_validators_strings.py
 import pytest
 
 from apps.core.validators.base import ValidationError
@@ -5,28 +6,29 @@ from apps.core.validators.strings import validate_string
 
 
 def test_valid_string() -> None:
-    validate_string("Dragon")
+    validator = validate_string(field="name")
+    validator("Dragon")
 
 
-def test_optional_none() -> None:
-    validate_string(None, required=False)
-
-
-def test_empty_required() -> None:
+def test_empty_string() -> None:
+    validator = validate_string(field="name")
     with pytest.raises(ValidationError):
-        validate_string("")
+        validator("")
 
 
 def test_string_with_spaces_only_invalid() -> None:
+    validator = validate_string(field="name")
     with pytest.raises(ValidationError):
-        validate_string("     ")
+        validator("     ")
 
 
-def test_none_required() -> None:
+def test_none_invalid() -> None:
+    validator = validate_string(field="name")
     with pytest.raises(ValidationError):
-        validate_string(None)
+        validator(None)
 
 
 def test_not_string() -> None:
+    validator = validate_string(field="name")
     with pytest.raises(ValidationError):
-        validate_string(123)
+        validator(123)

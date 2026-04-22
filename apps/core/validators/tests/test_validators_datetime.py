@@ -1,3 +1,4 @@
+# apps/core/validators/tests/test_validators_datetime.py
 import pytest
 
 from apps.core.validators.base import ValidationError
@@ -5,30 +6,40 @@ from apps.core.validators.datetime import validate_datetime
 
 
 def test_valid_datetime_with_z() -> None:
-    validate_datetime("2026-04-19T14:33:00Z")
+    validator = validate_datetime(field="captured_at")
+    validator("2026-04-19T14:33:00Z")
 
 
 def test_valid_datetime_with_offset() -> None:
-    validate_datetime("2026-04-19T14:33:00+00:00")
+    validator = validate_datetime(field="captured_at")
+    validator("2026-04-19T14:33:00+00:00")
 
 
 def test_invalid_datetime_without_timezone() -> None:
+    validator = validate_datetime(field="captured_at")
+
     with pytest.raises(ValidationError) as exc:
-        validate_datetime("2026-04-19T14:33:00")
+        validator("2026-04-19T14:33:00")
 
     assert "timezone" in str(exc.value).lower()
 
 
 def test_invalid_datetime_format() -> None:
+    validator = validate_datetime(field="captured_at")
+
     with pytest.raises(ValidationError):
-        validate_datetime("invalid-date")
+        validator("invalid-date")
 
 
 def test_invalid_datetime_type() -> None:
+    validator = validate_datetime(field="captured_at")
+
     with pytest.raises(ValidationError):
-        validate_datetime(123)
+        validator(123)
 
 
 def test_invalid_empty_string() -> None:
+    validator = validate_datetime(field="captured_at")
+
     with pytest.raises(ValidationError):
-        validate_datetime("")
+        validator("")
