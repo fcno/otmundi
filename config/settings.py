@@ -4,18 +4,17 @@ Django settings for config project.
 
 import os
 from pathlib import Path
+
 import environ
 
 # Inicializa o environ
-env = environ.Env(
-    DEBUG=(bool, False)
-)
+env = environ.Env(DEBUG=(bool, False))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Lê o arquivo .env
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 # --- SECURITY WARNING ---
 SECRET_KEY = env("SECRET_KEY", default="django-insecure-mudar-em-producao")
@@ -80,7 +79,9 @@ DATABASES = {
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+    },
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
