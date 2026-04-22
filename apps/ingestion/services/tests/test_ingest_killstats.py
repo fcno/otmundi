@@ -1,6 +1,7 @@
 # apps/ingestion/services/tests/test_ingest_killstats.py
 
 from datetime import datetime
+from typing import Any
 
 import pytest
 
@@ -9,7 +10,7 @@ from apps.ingestion.providers.killstats_scraper import KillStatsScraperProvider
 from apps.ingestion.services.ingest_killstats import KillStatsIngestService
 
 
-def build_valid_payload():
+def build_valid_payload() -> dict[str, Any]:
     return {
         "snapshot_id": "2026-04-20T19:32:24+00:00_11",
         "captured_at": "2026-04-20T19:32:24+00:00",

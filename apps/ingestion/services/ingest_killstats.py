@@ -1,5 +1,5 @@
 # apps/ingestion/services/ingest_killstats.py
-from typing import Any
+from typing import Any, cast
 
 from apps.core.helpers.validate_and_normalize import validate_and_normalize
 from apps.core.normalizers.datetime import normalize_datetime
@@ -17,6 +17,7 @@ from apps.ingestion.dto import (
 from apps.ingestion.providers.killstats_scraper import (
     KillStatsScraperProvider,
     ProviderOutput,
+    RawProviderInput,
 )
 
 
@@ -25,7 +26,9 @@ class KillStatsIngestService:
         self.provider = provider
 
     def ingest(self, raw: dict[str, Any]) -> WorldKillStatsDTO:
-        data: ProviderOutput = self.provider.normalize_raw(raw)
+        raw_input = cast(RawProviderInput, raw)
+
+        data: ProviderOutput = self.provider.normalize_raw(raw_input)
 
         snapshot_id = validate_and_normalize(
             data["snapshot_id"],

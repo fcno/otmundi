@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from typing import Any
 
 import pytest
 
@@ -57,8 +58,11 @@ def test_multiple_validators_error_on_second() -> None:
 
 def test_validation_error_required() -> None:
     with pytest.raises(ValidationError):
+        # 1. Anotamos a variável para guiar a inferência do Mypy
+        value_to_validate: Any = None
+
         validate_and_normalize(
-            None,
+            value_to_validate,
             [
                 validate_required(field="name"),
                 validate_string(field="name"),
