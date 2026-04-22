@@ -1,7 +1,8 @@
 # apps/ingestion/services/tests/test_ingest_killstats.py
 
-import pytest
 from datetime import datetime
+
+import pytest
 
 from apps.core.validators.base import ValidationError
 from apps.ingestion.providers.killstats_scraper import KillStatsScraperProvider
@@ -25,6 +26,7 @@ def build_valid_payload():
 
 # ===== SUCCESS =====
 
+
 def test_ingest_full_pipeline() -> None:
     service = KillStatsIngestService(KillStatsScraperProvider())
     result = service.ingest(build_valid_payload())
@@ -43,6 +45,7 @@ def test_ingest_full_pipeline() -> None:
 
 
 # ===== ROOT REQUIRED vs TYPE =====
+
 
 def test_snapshot_id_required() -> None:
     payload = build_valid_payload()
@@ -86,6 +89,7 @@ def test_captured_at_invalid_format() -> None:
 
 # ===== WORLD =====
 
+
 def test_world_id_required() -> None:
     payload = build_valid_payload()
     payload["world"]["id"] = None
@@ -103,6 +107,7 @@ def test_world_name_empty() -> None:
 
 
 # ===== MONSTER =====
+
 
 def test_monster_required() -> None:
     payload = build_valid_payload()
@@ -129,6 +134,7 @@ def test_monster_not_string() -> None:
 
 
 # ===== METRICS (REQUIRED vs TYPE) =====
+
 
 def test_players_killed_required() -> None:
     payload = build_valid_payload()

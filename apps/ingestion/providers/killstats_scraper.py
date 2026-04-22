@@ -2,8 +2,8 @@ from typing import TypedDict
 
 from .base import BaseProvider
 
-
 # ===== RAW INPUT (externo) =====
+
 
 class RawKillMetricDict(TypedDict):
     players_killed: int | str
@@ -30,6 +30,7 @@ class RawProviderInput(TypedDict):
 
 # ===== PROVIDER OUTPUT (ainda não normalizado) =====
 
+
 class KillMetricDict(TypedDict):
     players_killed: int | str
     monsters_killed: int | str
@@ -50,6 +51,7 @@ class ProviderOutput(TypedDict):
 
 
 # ===== PROVIDER =====
+
 
 class KillStatsScraperProvider(BaseProvider[ProviderOutput]):
     def normalize_raw(self, data: RawProviderInput) -> ProviderOutput:

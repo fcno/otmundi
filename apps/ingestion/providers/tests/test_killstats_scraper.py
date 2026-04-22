@@ -58,8 +58,13 @@ def test_normalize_raw_full_structure() -> None:
     assert item1["monster"] == raw1["monster"]
     assert item1["last_day"]["players_killed"] == raw1["last_day"]["players_killed"]
     assert item1["last_day"]["monsters_killed"] == raw1["last_day"]["monsters_killed"]
-    assert item1["last_7_days"]["players_killed"] == raw1["last_7_days"]["players_killed"]
-    assert item1["last_7_days"]["monsters_killed"] == raw1["last_7_days"]["monsters_killed"]
+    assert (
+        item1["last_7_days"]["players_killed"] == raw1["last_7_days"]["players_killed"]
+    )
+    assert (
+        item1["last_7_days"]["monsters_killed"]
+        == raw1["last_7_days"]["monsters_killed"]
+    )
 
     # item 2
     item2 = result["data"][1]
@@ -68,5 +73,10 @@ def test_normalize_raw_full_structure() -> None:
     assert item2["monster"] == raw2["monster"]
     assert item2["last_day"]["players_killed"] == raw2["last_day"]["players_killed"]
     assert item2["last_day"]["monsters_killed"] == raw2["last_day"]["monsters_killed"]
-    assert item2["last_7_days"]["players_killed"] == raw2["last_7_days"]["players_killed"]
-    assert item2["last_7_days"]["monsters_killed"] == raw2["last_7_days"]["monsters_killed"]
+    assert (
+        item2["last_7_days"]["players_killed"] == raw2["last_7_days"]["players_killed"]
+    )
+    assert (
+        item2["last_7_days"]["monsters_killed"]
+        == raw2["last_7_days"]["monsters_killed"]
+    )

@@ -1,5 +1,3 @@
-from typing import Callable
-
 from django.utils.translation import gettext_lazy as _
 
 from .base import ValidationError
