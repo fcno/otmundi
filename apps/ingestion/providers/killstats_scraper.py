@@ -53,7 +53,7 @@ class ProviderOutput(TypedDict):
 # ===== PROVIDER =====
 
 
-class KillStatsScraperProvider(BaseProvider[ProviderOutput]):
+class KillStatsScraperProvider(BaseProvider[RawProviderInput, ProviderOutput]):
     def normalize_raw(self, data: RawProviderInput) -> ProviderOutput:
         return {
             "snapshot_id": data["snapshot_id"],

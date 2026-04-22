@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Any
 
 
-class BaseProvider[T](ABC):
+class BaseProvider[Raw, Parsed](ABC):
     @abstractmethod
-    def normalize_raw(self, data: dict[str, Any]) -> T:
+    def normalize_raw(self, data: Raw) -> Parsed:
         raise NotImplementedError

@@ -1,5 +1,3 @@
-from typing import cast
-
 from apps.core.validators.types import Validator
 
 
@@ -13,5 +11,5 @@ def test_validator_protocol_accepts_callable() -> None:
 
 
 def test_validator_protocol_type_check() -> None:
-    v = cast(Validator, dummy_validator)
+    v: Validator = dummy_validator
     v(123)

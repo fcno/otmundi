@@ -13,7 +13,7 @@ from apps.core.validators.required import validate_required
 from apps.core.validators.strings import validate_string
 
 
-def test_string_pipeline():
+def test_string_pipeline() -> None:
     result = validate_and_normalize(
         "  ABC  ",
         [validate_string(field="name")],
@@ -22,7 +22,7 @@ def test_string_pipeline():
     assert result == "abc"
 
 
-def test_integer_pipeline():
+def test_integer_pipeline() -> None:
     result = validate_and_normalize(
         10,
         [validate_integer(field="age")],
@@ -31,7 +31,7 @@ def test_integer_pipeline():
     assert result == 10
 
 
-def test_datetime_pipeline():
+def test_datetime_pipeline() -> None:
     result = validate_and_normalize(
         "2026-01-01T00:00:00+00:00",
         [validate_datetime(field="captured_at")],
@@ -43,7 +43,7 @@ def test_datetime_pipeline():
     assert result == expected
 
 
-def test_multiple_validators_error_on_second():
+def test_multiple_validators_error_on_second() -> None:
     with pytest.raises(ValidationError):
         validate_and_normalize(
             "",  # passa required, falha no string
@@ -55,7 +55,7 @@ def test_multiple_validators_error_on_second():
         )
 
 
-def test_validation_error_required():
+def test_validation_error_required() -> None:
     with pytest.raises(ValidationError):
         validate_and_normalize(
             None,
