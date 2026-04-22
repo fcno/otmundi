@@ -5,39 +5,37 @@ msgstr ""
 "Language: en\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
-#: .\apps\core\normalizers\datetime.py:11
-msgid "Datetime normalization failed"
-msgstr "Datetime normalization failed"
+#: .\apps\core\validators\datetime.py:14
+#, python-brace-format
+msgid "The field '{field}' must be a datetime string."
+msgstr "The field '{field}' must be a datetime string."
 
-#: .\apps\core\validators\datetime.py:12
-msgid "Datetime must be a string"
-msgstr "Datetime must be a string"
+#: .\apps\core\validators\datetime.py:21
+#, python-brace-format
+msgid "The field '{field}' has an invalid datetime."
+msgstr "The field '{field}' has an invalid datetime."
 
-#: .\apps\core\validators\datetime.py:17
-msgid "Invalid datetime"
-msgstr "Invalid datetime format"
+#: .\apps\core\validators\datetime.py:26
+#, python-brace-format
+msgid "The field '{field}' must include timezone."
+msgstr "The field '{field}' must include timezone."
 
-#: .\apps\core\validators\datetime.py:20
-msgid "Datetime must include timezone"
-msgstr "Datetime must include timezone"
+#: .\apps\core\validators\integers.py:17
+#, python-brace-format
+msgid "The field '{field}' must be an integer."
+msgstr "The field '{field}' must be an integer."
 
-#: .\apps\core\validators\integers.py:13
-msgid "Value must be an integer"
-msgstr "Value must be an integer"
-
-#: .\apps\core\validators\required.py:11
+#: .\apps\core\validators\required.py:13
 #, python-brace-format
 msgid "The field '{field}' is required."
 msgstr "The field '{field}' is required."
 
-#: .\apps\core\validators\strings.py:9
-msgid "Value is required"
-msgstr "Value is required"
+#: .\apps\core\validators\strings.py:12
+#, python-brace-format
+msgid "The field '{field}' must be a string."
+msgstr "The field '{field}' must be a string."
 
-#: .\apps\core\validators\strings.py:13
-msgid "Value must be a string"
-msgstr "Value must be a string"
-
-#: .\apps\core\validators\strings.py:16
-msgid "Value cannot be empty"
-msgstr "Value cannot be empty"
+#: .\apps\core\validators\strings.py:17
+#, python-brace-format
+msgid "The field '{field}' cannot be empty."
+msgstr "The field '{field}' cannot be empty."

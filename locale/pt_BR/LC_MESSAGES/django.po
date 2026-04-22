@@ -5,39 +5,37 @@ msgstr ""
 "Language: pt_BR\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
-#: .\apps\core\normalizers\datetime.py:11
-msgid "Datetime normalization failed"
-msgstr ""
+#: .\apps\core\validators\datetime.py:14
+#, python-brace-format
+msgid "The field '{field}' must be a datetime string."
+msgstr "O campo '{field}' deve ser uma string de data e hora."
 
-#: .\apps\core\validators\datetime.py:12
-msgid "Datetime must be a string"
-msgstr "Data/hora deve ser uma string"
+#: .\apps\core\validators\datetime.py:21
+#, python-brace-format
+msgid "The field '{field}' has an invalid datetime."
+msgstr "O campo '{field}' possui uma data e hora inválida."
 
-#: .\apps\core\validators\datetime.py:17
-msgid "Invalid datetime"
-msgstr "Formato de data/hora inválido"
+#: .\apps\core\validators\datetime.py:26
+#, python-brace-format
+msgid "The field '{field}' must include timezone."
+msgstr "O campo '{field}' deve incluir fuso horário."
 
-#: .\apps\core\validators\datetime.py:20
-msgid "Datetime must include timezone"
-msgstr "Data/hora deve incluir o timezone"
+#: .\apps\core\validators\integers.py:17
+#, python-brace-format
+msgid "The field '{field}' must be an integer."
+msgstr "O campo '{field}' deve ser um número inteiro."
 
-#: .\apps\core\validators\integers.py:13
-msgid "Value must be an integer"
-msgstr "Valor deve ser um inteiro"
-
-#: .\apps\core\validators\required.py:11
+#: .\apps\core\validators\required.py:13
 #, python-brace-format
 msgid "The field '{field}' is required."
 msgstr "O campo '{field}' é obrigatório."
 
-#: .\apps\core\validators\strings.py:9
-msgid "Value is required"
-msgstr "Valor é obrigatório"
+#: .\apps\core\validators\strings.py:12
+#, python-brace-format
+msgid "The field '{field}' must be a string."
+msgstr "O campo '{field}' deve ser uma string."
 
-#: .\apps\core\validators\strings.py:13
-msgid "Value must be a string"
-msgstr "Valor deve ser uma string"
-
-#: .\apps\core\validators\strings.py:16
-msgid "Value cannot be empty"
-msgstr "Valor não pode ser vazio"
+#: .\apps\core\validators\strings.py:17
+#, python-brace-format
+msgid "The field '{field}' cannot be empty."
+msgstr "O campo '{field}' não pode estar vazio."

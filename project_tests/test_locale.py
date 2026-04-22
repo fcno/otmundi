@@ -8,16 +8,20 @@ from apps.core.validators.integers import validate_integer
 def test_error_in_english() -> None:
     activate("en")
 
-    with pytest.raises(ValidationError) as exc:
-        validate_integer("abc")
+    validator = validate_integer(field="age")
 
-    assert str(exc.value) == "Value must be an integer"
+    with pytest.raises(ValidationError) as exc:
+        validator("abc")
+
+    assert str(exc.value) == "The field 'age' must be an integer."
 
 
 def test_error_in_portuguese() -> None:
     activate("pt_BR")
 
-    with pytest.raises(ValidationError) as exc:
-        validate_integer("abc")
+    validator = validate_integer(field="age")
 
-    assert str(exc.value) == "Valor deve ser um inteiro"
+    with pytest.raises(ValidationError) as exc:
+        validator("abc")
+
+    assert str(exc.value) == "O campo 'age' deve ser um número inteiro."
