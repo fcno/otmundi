@@ -40,22 +40,24 @@ def test_unique_world_datetime() -> None:
             source_file="file2.json",
         )
 
+
 @pytest.mark.django_db
 def test_unique_snapshot_id() -> None:
-    world = World.objects.create(name="Serenian")
+    """Verifica se o banco impede snapshots com o mesmo snapshot_id (IntegrityError)."""
+
+    world = World.objects.create(name="serenian", external_id="12345")
     ts = now()
 
+    # Primeiro snapshot criado com sucesso
     Snapshot.objects.create(
-        snapshot_id="file_123",
-        world=world,
-        captured_at=ts,
-        source_file="file1.json"
+        snapshot_id="file_123", world=world, captured_at=ts, source_file="file1.json"
     )
 
+    # O segundo snapshot com o MESMO snapshot_id deve disparar IntegrityError
     with pytest.raises(IntegrityError):
         Snapshot.objects.create(
-            snapshot_id="file_123",
+            snapshot_id="file_123",  # ID Duplicado
             world=world,
             captured_at=ts,
-            source_file="file2.json"
+            source_file="file2.json",
         )

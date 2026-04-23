@@ -10,6 +10,7 @@ from apps.core.validators.datetime import validate_datetime
 from apps.core.validators.integers import validate_integer
 from apps.core.validators.required import validate_required
 from apps.core.validators.strings import validate_string
+from apps.core.validators.unique import validate_unique
 from apps.ingestion.dto import (
     KillStatsMetricDTO,
     MonsterStatsDTO,
@@ -20,6 +21,7 @@ from apps.ingestion.providers.killstats_scraper import (
     ProviderOutput,
     RawProviderInput,
 )
+from apps.snapshots.models.snapshot import Snapshot
 
 
 class KillStatsIngestService:
@@ -38,6 +40,7 @@ class KillStatsIngestService:
             [
                 validate_required(field="snapshot_id"),
                 validate_string(field="snapshot_id"),
+                validate_unique(model_class=Snapshot, field="snapshot_id"),
             ],
             normalize_string,
         )
