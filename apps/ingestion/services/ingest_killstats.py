@@ -1,6 +1,7 @@
 # apps/ingestion/services/ingest_killstats.py
 from typing import Any, cast
 
+from apps.core.helpers.sanitizers import sanitize_data
 from apps.core.helpers.validate_and_normalize import validate_and_normalize
 from apps.core.normalizers.datetime import normalize_datetime
 from apps.core.normalizers.integers import normalize_integer
@@ -26,7 +27,9 @@ class KillStatsIngestService:
         self.provider = provider
 
     def ingest(self, raw: dict[str, Any]) -> WorldKillStatsDTO:
-        raw_input = cast(RawProviderInput, raw)
+        sanitized = sanitize_data(raw)
+
+        raw_input = cast(RawProviderInput, sanitized)
 
         data: ProviderOutput = self.provider.normalize_raw(raw_input)
 

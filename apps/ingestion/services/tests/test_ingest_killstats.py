@@ -1,5 +1,3 @@
-# apps/ingestion/services/tests/test_ingest_killstats.py
-
 from datetime import datetime
 from typing import Any
 
@@ -25,7 +23,7 @@ def build_valid_payload() -> dict[str, Any]:
     }
 
 
-# ===== SUCCESS =====
+# ===== SUCCESS & INTEGRATION =====
 
 
 def test_ingest_full_pipeline() -> None:
@@ -45,6 +43,19 @@ def test_ingest_full_pipeline() -> None:
     assert m.last_7_days.monsters_killed == 20
 
 
+def test_ingest_sanitizes_dirty_input() -> None:
+    """Garante que o serviço limpa espaços (trim) antes da normalização."""
+    service = KillStatsIngestService(KillStatsScraperProvider())
+    payload = build_valid_payload()
+    payload["world"]["name"] = "  Auroria  "
+    payload["data"][0]["monster"] = "  Dragon Lord  "
+
+    result = service.ingest(payload)
+
+    assert result.world_name == "auroria"
+    assert result.data[0].monster == "dragon lord"
+
+
 # ===== ROOT REQUIRED vs TYPE =====
 
 
@@ -57,6 +68,7 @@ def test_snapshot_id_required() -> None:
 
 
 def test_snapshot_id_empty_string() -> None:
+    """Com o sanitizer, '   ' vira None e falha no required."""
     payload = build_valid_payload()
     payload["snapshot_id"] = "   "
 
