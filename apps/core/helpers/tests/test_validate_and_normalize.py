@@ -45,9 +45,17 @@ def test_datetime_pipeline() -> None:
 
 
 def test_multiple_validators_error_on_second() -> None:
+    """
+    Usamos uma lista: o validate_required passa (não é None),
+    mas o validate_string falha (não é str).
+    O cast(Any, [...]) evita que o Mypy trave na entrada,
+    permitindo testar a falha do validador.
+    """
+    invalid_input: Any = [1, 2, 3]
+
     with pytest.raises(ValidationError):
         validate_and_normalize(
-            "",  # passa required, falha no string
+            invalid_input,
             [
                 validate_required(field="name"),
                 validate_string(field="name"),
@@ -58,7 +66,10 @@ def test_multiple_validators_error_on_second() -> None:
 
 def test_validation_error_required() -> None:
     with pytest.raises(ValidationError):
-        # 1. Anotamos a variável para guiar a inferência do Mypy
+        """
+        Simula o cenário onde o sanitizer transformou "  " em None.
+        O validate_required deve ser o responsável por lançar o erro.
+        """
         value_to_validate: Any = None
 
         validate_and_normalize(
