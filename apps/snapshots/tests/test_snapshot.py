@@ -39,3 +39,23 @@ def test_unique_world_datetime() -> None:
             captured_at=ts,
             source_file="file2.json",
         )
+
+@pytest.mark.django_db
+def test_unique_snapshot_id() -> None:
+    world = World.objects.create(name="Serenian")
+    ts = now()
+
+    Snapshot.objects.create(
+        snapshot_id="file_123",
+        world=world,
+        captured_at=ts,
+        source_file="file1.json"
+    )
+
+    with pytest.raises(IntegrityError):
+        Snapshot.objects.create(
+            snapshot_id="file_123",
+            world=world,
+            captured_at=ts,
+            source_file="file2.json"
+        )
