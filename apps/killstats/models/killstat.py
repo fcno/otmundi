@@ -5,8 +5,12 @@ from apps.snapshots.models.snapshot import Snapshot
 
 
 class KillStat(models.Model):
-    snapshot = models.ForeignKey(Snapshot, on_delete=models.CASCADE)
-    monster = models.ForeignKey(Monster, on_delete=models.CASCADE)
+    snapshot = models.ForeignKey(
+        Snapshot, on_delete=models.CASCADE, related_name="kill_stats"
+    )
+    monster = models.ForeignKey(
+        Monster, on_delete=models.CASCADE, related_name="kill_stats"
+    )
 
     last_day_players_killed = models.IntegerField()
     last_day_monsters_killed = models.IntegerField()
@@ -23,4 +27,4 @@ class KillStat(models.Model):
         ]
 
     def __str__(self) -> str:
-        return self.monster.name
+        return f"{self.monster.name} ({self.snapshot.captured_at})"
