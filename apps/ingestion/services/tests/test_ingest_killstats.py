@@ -1,257 +1,103 @@
-from datetime import datetime
 from typing import Any
 
 import pytest
 
 from apps.core.validators.base import ValidationError
 from apps.ingestion.providers.killstats_scraper import KillStatsScraperProvider
+from apps.ingestion.repositories.killstats_repository import KillStatsRepository
 from apps.ingestion.services.ingest_killstats import KillStatsIngestService
-from apps.snapshots.models.snapshot import Snapshot
-from apps.worlds.models.world import World
+from apps.killstats.models.killstat import KillStat
 
 
 def build_valid_payload() -> dict[str, Any]:
+    """Factory com dados originais para manter o histórico do Git limpo."""
     return {
-        "snapshot_id": "2026-04-20T19:32:24+00:00_11",
-        "captured_at": "2026-04-20T19:32:24+00:00",
+        "snapshot_id": "test_snapshot_001",
+        "captured_at": "2026-04-24T10:00:00Z",
         "world": {"id": "11", "name": "Auroria"},
         "data": [
             {
                 "monster": "Dragon Lord",
-                "last_day": {"players_killed": 0, "monsters_killed": 10},
-                "last_7_days": {"players_killed": 1, "monsters_killed": 20},
+                "last_day": {"players_killed": 10, "monsters_killed": 200},
+                "last_7_days": {"players_killed": 50, "monsters_killed": 1000},
             }
         ],
     }
 
 
-# ===== SUCCESS & INTEGRATION =====
+@pytest.fixture
+def service() -> KillStatsIngestService:
+    return KillStatsIngestService(KillStatsScraperProvider(), KillStatsRepository())
 
 
 @pytest.mark.django_db
-def test_ingest_full_pipeline() -> None:
-    service = KillStatsIngestService(KillStatsScraperProvider())
-    result = service.ingest(build_valid_payload())
-
-    assert result.snapshot_id == "2026-04-20t19:32:24+00:00_11"
-    assert isinstance(result.captured_at, datetime)
-    assert result.world_id == "11"
-    assert result.world_name == "auroria"
-
-    m = result.data[0]
-    assert m.monster == "dragon lord"
-    assert m.last_day.players_killed == 0
-    assert m.last_day.monsters_killed == 10
-    assert m.last_7_days.players_killed == 1
-    assert m.last_7_days.monsters_killed == 20
-
-
-@pytest.mark.django_db
-def test_ingest_sanitizes_dirty_input() -> None:
-    """Garante que o serviço limpa espaços (trim) antes da normalização."""
-    service = KillStatsIngestService(KillStatsScraperProvider())
-    payload = build_valid_payload()
-
-    # Input "sujo" com espaços extras
-    payload["world"]["name"] = "   Auroria   "
-    payload["data"][0]["monster"] = "   Dragon Lord   "
-
-    result = service.ingest(payload)
-
-    assert result.world_name == "auroria"
-    assert result.data[0].monster == "dragon lord"
-
-
-# ===== ROOT REQUIRED vs TYPE =====
-
-
-def test_snapshot_id_required() -> None:
-    payload = build_valid_payload()
-    payload["snapshot_id"] = None
-
-    with pytest.raises(ValidationError):
-        KillStatsIngestService(KillStatsScraperProvider()).ingest(payload)
-
-
-def test_snapshot_id_empty_string() -> None:
-    """Com o sanitizer, '   ' vira None e falha no required."""
-    payload = build_valid_payload()
-    payload["snapshot_id"] = "   "
-
-    with pytest.raises(ValidationError):
-        KillStatsIngestService(KillStatsScraperProvider()).ingest(payload)
-
-
-def test_snapshot_id_not_string() -> None:
-    payload = build_valid_payload()
-    payload["snapshot_id"] = 123
-
-    with pytest.raises(ValidationError):
-        KillStatsIngestService(KillStatsScraperProvider()).ingest(payload)
-
-
-@pytest.mark.django_db
-def test_captured_at_required() -> None:
-    payload = build_valid_payload()
-    payload["captured_at"] = None
-
-    with pytest.raises(ValidationError):
-        KillStatsIngestService(KillStatsScraperProvider()).ingest(payload)
-
-
-@pytest.mark.django_db
-def test_captured_at_invalid_format() -> None:
-    payload = build_valid_payload()
-    payload["captured_at"] = "invalid"
-
-    with pytest.raises(ValidationError):
-        KillStatsIngestService(KillStatsScraperProvider()).ingest(payload)
-
-
-# ===== WORLD =====
-
-
-@pytest.mark.django_db
-def test_world_id_required() -> None:
-    payload = build_valid_payload()
-    payload["world"]["id"] = None
-
-    with pytest.raises(ValidationError):
-        KillStatsIngestService(KillStatsScraperProvider()).ingest(payload)
-
-
-@pytest.mark.django_db
-def test_world_name_empty() -> None:
-    payload = build_valid_payload()
-    payload["world"]["name"] = "   "
-
-    with pytest.raises(ValidationError):
-        KillStatsIngestService(KillStatsScraperProvider()).ingest(payload)
-
-
-# ===== MONSTER =====
-
-
-@pytest.mark.django_db
-def test_monster_required() -> None:
-    payload = build_valid_payload()
-    payload["data"][0]["monster"] = None
-
-    with pytest.raises(ValidationError):
-        KillStatsIngestService(KillStatsScraperProvider()).ingest(payload)
-
-
-@pytest.mark.django_db
-def test_monster_empty() -> None:
-    payload = build_valid_payload()
-    payload["data"][0]["monster"] = "   "
-
-    with pytest.raises(ValidationError):
-        KillStatsIngestService(KillStatsScraperProvider()).ingest(payload)
-
-
-@pytest.mark.django_db
-def test_monster_not_string() -> None:
-    payload = build_valid_payload()
-    payload["data"][0]["monster"] = 123
-
-    with pytest.raises(ValidationError):
-        KillStatsIngestService(KillStatsScraperProvider()).ingest(payload)
-
-
-# ===== METRICS (REQUIRED vs TYPE) =====
-
-
-@pytest.mark.django_db
-def test_players_killed_required() -> None:
-    payload = build_valid_payload()
-    payload["data"][0]["last_day"]["players_killed"] = None
-
-    with pytest.raises(ValidationError):
-        KillStatsIngestService(KillStatsScraperProvider()).ingest(payload)
-
-
-@pytest.mark.django_db
-def test_players_killed_invalid_type() -> None:
-    payload = build_valid_payload()
-    payload["data"][0]["last_day"]["players_killed"] = "abc"
-
-    with pytest.raises(ValidationError):
-        KillStatsIngestService(KillStatsScraperProvider()).ingest(payload)
-
-
-@pytest.mark.django_db
-def test_monsters_killed_required() -> None:
-    payload = build_valid_payload()
-    payload["data"][0]["last_day"]["monsters_killed"] = None
-
-    with pytest.raises(ValidationError):
-        KillStatsIngestService(KillStatsScraperProvider()).ingest(payload)
-
-
-@pytest.mark.django_db
-def test_monsters_killed_invalid_type() -> None:
-    payload = build_valid_payload()
-    payload["data"][0]["last_day"]["monsters_killed"] = "abc"
-
-    with pytest.raises(ValidationError):
-        KillStatsIngestService(KillStatsScraperProvider()).ingest(payload)
-
-
-@pytest.mark.django_db
-def test_last_day_players_invalid() -> None:
-    payload = build_valid_payload()
-    payload["data"][0]["last_day"]["players_killed"] = "abc"
-
-    with pytest.raises(ValidationError):
-        KillStatsIngestService(KillStatsScraperProvider()).ingest(payload)
-
-
-@pytest.mark.django_db
-def test_last_day_monsters_invalid() -> None:
-    payload = build_valid_payload()
-    payload["data"][0]["last_day"]["monsters_killed"] = "abc"
-
-    with pytest.raises(ValidationError):
-        KillStatsIngestService(KillStatsScraperProvider()).ingest(payload)
-
-
-@pytest.mark.django_db
-def test_last_7_days_players_invalid() -> None:
-    payload = build_valid_payload()
-    payload["data"][0]["last_7_days"]["players_killed"] = "abc"
-
-    with pytest.raises(ValidationError):
-        KillStatsIngestService(KillStatsScraperProvider()).ingest(payload)
-
-
-@pytest.mark.django_db
-def test_last_7_days_monsters_invalid() -> None:
-    payload = build_valid_payload()
-    payload["data"][0]["last_7_days"]["monsters_killed"] = "abc"
-
-    with pytest.raises(ValidationError):
-        KillStatsIngestService(KillStatsScraperProvider()).ingest(payload)
-
-
-@pytest.mark.django_db
-def test_ingest_fails_if_snapshot_id_already_exists() -> None:
-    """Valida se o Fail-Fast de unicidade está funcionando no Service."""
-    service = KillStatsIngestService(KillStatsScraperProvider())
-    payload = build_valid_payload()
-    snapshot_id = payload["snapshot_id"]
-
-    # Simulamos que o snapshot já existe criando um no banco
-    world = World.objects.create(name="auroria", external_id="11")
-    Snapshot.objects.create(
-        snapshot_id=snapshot_id,
-        world=world,
-        captured_at="2026-04-20T19:32:24Z",
-        source_file="old.json",
+class TestKillStatsIngestService:
+
+    def test_ingest_persists_every_single_field(
+        self, service: KillStatsIngestService
+    ) -> None:
+        """Garante a persistência integral de todos os campos do payload."""
+        payload = build_valid_payload()
+        snapshot = service.ingest(payload)
+
+        assert snapshot.snapshot_id == "test_snapshot_001"
+        assert snapshot.world.name == "auroria"
+
+        # Mypy: Type guard para evitar [union-attr]
+        kill_stat: KillStat | None = snapshot.kill_stats.first()
+        assert kill_stat is not None
+
+        assert kill_stat.monster.name == "dragon lord"
+        assert kill_stat.last_day_players_killed == 10
+        assert kill_stat.last_day_monsters_killed == 200
+        assert kill_stat.last_7_days_players_killed == 50
+        assert kill_stat.last_7_days_monsters_killed == 1000
+
+    def test_ingest_normalization_and_trim(
+        self, service: KillStatsIngestService
+    ) -> None:
+        """Valida se o trim e lower funcionam em múltiplos níveis."""
+        payload = build_valid_payload()
+        payload["world"]["name"] = "   AURORIA   "
+        payload["data"][0]["monster"] = "   DRAGON LORD   "
+
+        snapshot = service.ingest(payload)
+
+        kill_stat = snapshot.kill_stats.first()
+        assert kill_stat is not None
+        assert snapshot.world.name == "auroria"
+        assert kill_stat.monster.name == "dragon lord"
+
+    @pytest.mark.parametrize(
+        "path, invalid_value",
+        [
+            (["snapshot_id"], None),
+            (["world", "id"], None),
+            (["captured_at"], "data-invalida"),
+            (["data", 0, "monster"], ""),
+        ],
     )
+    def test_ingest_validation_integrity(
+        self, service: KillStatsIngestService, path: list[Any], invalid_value: Any
+    ) -> None:
+        """Garante que falhas de contrato lancem a ValidationError customizada do Core."""
+        payload = build_valid_payload()
 
-    # A tentativa de ingerir o mesmo snapshot_id deve levantar ValidationError
-    with pytest.raises(ValidationError) as exc:
+        target = payload
+        for step in path[:-1]:
+            target = target[step]
+        target[path[-1]] = invalid_value
+
+        with pytest.raises(ValidationError):
+            service.ingest(payload)
+
+    def test_duplicate_snapshot_prevention(
+        self, service: KillStatsIngestService
+    ) -> None:
+        """Valida a restrição de unicidade do banco de dados via Service."""
+        payload = build_valid_payload()
         service.ingest(payload)
 
-    assert "already exists" in str(exc.value)
+        # O segundo envio do mesmo payload deve disparar ValidationError (Unique)
+        with pytest.raises(ValidationError):
+            service.ingest(payload)

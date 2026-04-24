@@ -21,18 +21,20 @@ from apps.ingestion.providers.killstats_scraper import (
     ProviderOutput,
     RawProviderInput,
 )
+from apps.ingestion.repositories.killstats_repository import KillStatsRepository
 from apps.snapshots.models.snapshot import Snapshot
 
 
 class KillStatsIngestService:
-    def __init__(self, provider: KillStatsScraperProvider) -> None:
+    def __init__(
+        self, provider: KillStatsScraperProvider, repository: KillStatsRepository
+    ) -> None:
         self.provider = provider
+        self.repository = repository
 
-    def ingest(self, raw: dict[str, Any]) -> WorldKillStatsDTO:
+    def ingest(self, raw: dict[str, Any]) -> Snapshot:
         sanitized = sanitize_data(raw)
-
         raw_input = cast(RawProviderInput, sanitized)
-
         data: ProviderOutput = self.provider.normalize_raw(raw_input)
 
         snapshot_id = validate_and_normalize(
@@ -47,10 +49,7 @@ class KillStatsIngestService:
 
         world_id = validate_and_normalize(
             data["world_id"],
-            [
-                validate_required(field="world_id"),
-                validate_string(field="world_id"),
-            ],
+            [validate_required(field="world_id"), validate_string(field="world_id")],
             normalize_string,
         )
 
@@ -73,14 +72,10 @@ class KillStatsIngestService:
         )
 
         monsters: list[MonsterStatsDTO] = []
-
         for item in data["data"]:
             monster = validate_and_normalize(
                 item["monster"],
-                [
-                    validate_required(field="monster"),
-                    validate_string(field="monster"),
-                ],
+                [validate_required(field="monster"), validate_string(field="monster")],
                 normalize_string,
             )
 
@@ -129,10 +124,13 @@ class KillStatsIngestService:
                 )
             )
 
-        return WorldKillStatsDTO(
+        dto = WorldKillStatsDTO(
             snapshot_id=snapshot_id,
             captured_at=captured_at,
             world_id=world_id,
             world_name=world_name,
             data=monsters,
         )
+
+        # O Service entrega o DTO validado para o Repository salvar
+        return self.repository.save_world_kill_stats(dto)
