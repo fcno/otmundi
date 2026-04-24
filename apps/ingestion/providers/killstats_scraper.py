@@ -55,10 +55,14 @@ class ProviderOutput(TypedDict):
 
 class KillStatsScraperProvider(BaseProvider[RawProviderInput, ProviderOutput]):
     def normalize_raw(self, data: RawProviderInput) -> ProviderOutput:
+        # Usamos .get() com fallback None para que os validadores 'validate_required'
+        # possam capturar a ausência do dado e lançar ValidationError corretamente.
+        world = data.get("world", {})
+
         return {
-            "snapshot_id": data["snapshot_id"],
-            "captured_at": data["captured_at"],
-            "world_id": data["world"]["id"],
-            "world_name": data["world"]["name"],
-            "data": data["data"],
+            "snapshot_id": data.get("snapshot_id"),
+            "captured_at": data.get("captured_at"),
+            "world_id": world.get("id"),
+            "world_name": world.get("name"),
+            "data": data.get("data", []),
         }
