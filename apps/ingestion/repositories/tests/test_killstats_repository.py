@@ -176,7 +176,7 @@ class TestKillStatsRepository:
         )
         assert Monster.objects.filter(name__in=["rat", "cave rat"]).count() == 2
 
-    def test_save_creates_spawn_event_on_kill(self) -> None:
+    def test_save_world_kill_stats_creates_events(self) -> None:
         """
         Garante que um MonsterSpawnEvent é criado automaticamente quando
         há registro de monstros mortos no DTO.
