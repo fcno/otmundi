@@ -36,6 +36,8 @@ INSTALLED_APPS = [
     "apps.monsters",
     "apps.snapshots",
     "apps.worlds",
+    "apps.users",
+    "apps.preferences",
     "rest_framework",
 ]
 
@@ -76,6 +78,7 @@ DATABASES = {
     "default": env.db(),
 }
 
+AUTH_USER_MODEL = "users.User"
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
