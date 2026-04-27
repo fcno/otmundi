@@ -6,6 +6,7 @@ from django.db import transaction
 from apps.ingestion.dto import KillStatsMetricDTO, MonsterStatsDTO, WorldKillStatsDTO
 from apps.ingestion.repositories.killstats_repository import KillStatsRepository
 from apps.killstats.models.killstat import KillStat
+from apps.killstats.models.monster_spawn_event import MonsterSpawnEvent
 from apps.monsters.models.monster import Monster
 from apps.snapshots.models.snapshot import Snapshot
 from apps.worlds.models.world import World
@@ -90,6 +91,8 @@ class TestKillStatsRepository:
         assert Snapshot.objects.filter(snapshot_id="error_test").exists() is False
         # O mundo Zuna também não deve existir (se foi criado na transação)
         assert World.objects.filter(name="zuna").exists() is False
+        # Verificação Adicional: O evento também não deve existir
+        assert MonsterSpawnEvent.objects.count() == 0
 
     def test_reuse_entities_prevents_duplication(self) -> None:
         """
@@ -172,3 +175,64 @@ class TestKillStatsRepository:
             KillStat.objects.filter(snapshot__snapshot_id="multi_monster").count() == 2
         )
         assert Monster.objects.filter(name__in=["rat", "cave rat"]).count() == 2
+
+    def test_save_creates_spawn_event_on_kill(self) -> None:
+        """
+        Garante que um MonsterSpawnEvent é criado automaticamente quando
+        há registro de monstros mortos no DTO.
+        """
+        repo = KillStatsRepository()
+        captured_at = datetime(2026, 4, 25, tzinfo=UTC)
+
+        dto = WorldKillStatsDTO(
+            snapshot_id="event_generation_test",
+            world_id="1",
+            world_name="Antica",
+            captured_at=captured_at,
+            data=[
+                MonsterStatsDTO(
+                    monster="Orshabaal",
+                    last_day=KillStatsMetricDTO(
+                        players_killed=0, monsters_killed=1
+                    ),  # Abate real
+                    last_7_days=KillStatsMetricDTO(
+                        players_killed=10, monsters_killed=20
+                    ),
+                )
+            ],
+        )
+
+        # Act
+        repo.save_world_kill_stats(dto)
+
+        # Assert - Evento de Spawn
+        # O evento deve existir, ser um abate real (is_puff=False) e ter a data correta
+        event = MonsterSpawnEvent.objects.get(monster__name="orshabaal")
+        assert event.is_puff is False  # Regra: Ingestão JSON = Abate
+        assert event.timestamp.date() == captured_at.date()
+        assert event.reported_by is None  # Ingestão automática não tem usuário
+
+    def test_save_does_not_create_event_when_no_kills(self) -> None:
+        """
+        Garante que NÃO é criado um MonsterSpawnEvent se monsters_killed for 0.
+        """
+        repo = KillStatsRepository()
+        dto = WorldKillStatsDTO(
+            snapshot_id="no_event_test",
+            world_id="1",
+            world_name="Antica",
+            captured_at=datetime.now(UTC),
+            data=[
+                MonsterStatsDTO(
+                    monster="Rat",
+                    last_day=KillStatsMetricDTO(0, 0),  # Sem abates
+                    last_7_days=KillStatsMetricDTO(0, 10),
+                )
+            ],
+        )
+
+        # Act
+        repo.save_world_kill_stats(dto)
+
+        # Assert
+        assert MonsterSpawnEvent.objects.filter(monster__name="rat").exists() is False
