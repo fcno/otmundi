@@ -8,6 +8,7 @@ from apps.ingestion.services.monster_event_ingest_service import (
 )
 from apps.killstats.models.monster_spawn_event import MonsterSpawnEvent
 from apps.monsters.models.monster import Monster
+from apps.worlds.models.world import World
 
 
 @pytest.mark.django_db
@@ -16,6 +17,7 @@ class TestMonsterEventIngestService:
     def setup(self) -> None:
         self.service = MonsterEventIngestService()
         self.monster = Monster.objects.create(name="orshabaal")
+        self.world = World.objects.create(name="antica")
 
     def test_create_event_from_ingestion_fields_integrity(self) -> None:
         """
@@ -24,10 +26,11 @@ class TestMonsterEventIngestService:
         """
         now = datetime(2026, 4, 27, 14, 0, tzinfo=UTC)
 
-        event = self.service.create_event_from_ingestion(self.monster, now)
+        event = self.service.create_event_from_ingestion(self.monster, now, self.world)
 
         assert isinstance(event, MonsterSpawnEvent)
         assert event.monster == self.monster
+        assert event.world == self.world
         assert event.timestamp == now
         assert event.is_puff is False  # Regra de ouro: Ingestão nunca é puff
         assert event.reported_by is None  # Automação não possui usuário
@@ -39,7 +42,7 @@ class TestMonsterEventIngestService:
         """
         now = timezone.now()
 
-        event = self.service.create_event_from_ingestion(self.monster, now)
+        event = self.service.create_event_from_ingestion(self.monster, now, self.world)
 
         assert event.pk is None  # O objeto não deve ter ID ainda (não salvo no banco)
         assert MonsterSpawnEvent.objects.count() == 0
@@ -52,8 +55,12 @@ class TestMonsterEventIngestService:
         ferumbras = Monster.objects.create(name="ferumbras")
         now = timezone.now()
 
-        event_orsh = self.service.create_event_from_ingestion(self.monster, now)
-        event_feru = self.service.create_event_from_ingestion(ferumbras, now)
+        event_orsh = self.service.create_event_from_ingestion(
+            self.monster, now, self.world
+        )
+        event_feru = self.service.create_event_from_ingestion(
+            ferumbras, now, self.world
+        )
 
         assert event_orsh.monster.name == "orshabaal"
         assert event_feru.monster.name == "ferumbras"
@@ -65,6 +72,8 @@ class TestMonsterEventIngestService:
         """
         complex_date = datetime(2026, 4, 27, 14, 5, 30, 123456, tzinfo=UTC)
 
-        event = self.service.create_event_from_ingestion(self.monster, complex_date)
+        event = self.service.create_event_from_ingestion(
+            self.monster, complex_date, self.world
+        )
 
         assert event.timestamp == complex_date

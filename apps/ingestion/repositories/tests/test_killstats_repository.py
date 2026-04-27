@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 
 import pytest
-from django.db import transaction
+from django.db import IntegrityError, transaction
 
 from apps.ingestion.dto import KillStatsMetricDTO, MonsterStatsDTO, WorldKillStatsDTO
 from apps.ingestion.repositories.killstats_repository import KillStatsRepository
@@ -182,10 +182,9 @@ class TestKillStatsRepository:
         há registro de monstros mortos no DTO.
         """
         repo = KillStatsRepository()
-        captured_at = datetime(2026, 4, 25, tzinfo=UTC)
-
+        captured_at = datetime(2026, 4, 20, 19, 32, tzinfo=UTC)
         dto = WorldKillStatsDTO(
-            snapshot_id="event_generation_test",
+            snapshot_id="event_test",
             world_id="1",
             world_name="Antica",
             captured_at=captured_at,
@@ -202,14 +201,14 @@ class TestKillStatsRepository:
             ],
         )
 
-        # Act
         repo.save_world_kill_stats(dto)
 
         # Assert - Evento de Spawn
         # O evento deve existir, ser um abate real (is_puff=False) e ter a data correta
         event = MonsterSpawnEvent.objects.get(monster__name="orshabaal")
+        assert event.world.name == "antica"
         assert event.is_puff is False  # Regra: Ingestão JSON = Abate
-        assert event.timestamp.date() == captured_at.date()
+        assert event.timestamp == captured_at
         assert event.reported_by is None  # Ingestão automática não tem usuário
 
     def test_save_does_not_create_event_when_no_kills(self) -> None:
@@ -236,3 +235,45 @@ class TestKillStatsRepository:
 
         # Assert
         assert MonsterSpawnEvent.objects.filter(monster__name="rat").exists() is False
+
+    def test_unique_constraint_collision_per_day_and_world(self) -> None:
+        """
+        TESTE DE COLISÃO: Garante que o banco impede dois eventos para o
+        mesmo monstro, no mesmo dia e no mesmo mundo.
+        """
+        repo = KillStatsRepository()
+        day_one = datetime(2026, 4, 20, 10, 0, tzinfo=UTC)
+        day_one_later = datetime(
+            2026, 4, 20, 22, 0, tzinfo=UTC
+        )  # Mesmo dia, hora diferente
+
+        dto1 = WorldKillStatsDTO(
+            snapshot_id="snap_1",
+            world_id="1",
+            world_name="Antica",
+            captured_at=day_one,
+            data=[
+                MonsterStatsDTO(
+                    "Orshabaal", KillStatsMetricDTO(0, 1), KillStatsMetricDTO(0, 1)
+                )
+            ],
+        )
+
+        dto2 = WorldKillStatsDTO(
+            snapshot_id="snap_2",
+            world_id="1",
+            world_name="Antica",
+            captured_at=day_one_later,
+            data=[
+                MonsterStatsDTO(
+                    "Orshabaal", KillStatsMetricDTO(0, 1), KillStatsMetricDTO(0, 1)
+                )
+            ],
+        )
+
+        # Primeiro salvamento OK
+        repo.save_world_kill_stats(dto1)
+
+        # Segundo salvamento deve falhar na constraint do banco
+        with pytest.raises(IntegrityError):
+            repo.save_world_kill_stats(dto2)

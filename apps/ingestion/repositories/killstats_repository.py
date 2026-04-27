@@ -56,7 +56,7 @@ class KillStatsRepository:
                 if item.last_day.monsters_killed > 0:
                     events_to_create.append(
                         MonsterEventIngestService.create_event_from_ingestion(
-                            monster, snapshot.captured_at
+                            monster, snapshot.captured_at, world
                         )
                     )
 
