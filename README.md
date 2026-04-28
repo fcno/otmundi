@@ -4,16 +4,26 @@ Sistema de monitoramento e ingestão de dados para mundos e monstros (Open Tibia
 
 ## 🎯 Objetivo do Projeto
 
-O Otmundi visa fornecer uma infraestrutura robusta para a gestão de estatísticas de jogo (Kill Stats). O foco principal é a integridade dos dados, garantindo que o ciclo de vida da informação — desde a raspagem (scraping) até a persistência no banco de dados — ocorra sem erros silenciosos ou inconsistências.
+O Otmundi visa fornecer uma infraestrutura robusta para a gestão de estatísticas de jogo (Kill Stats). O foco principal é a integridade dos dados, garantindo que o ciclo de vida da informação — desde a raspagem (scraping) até a persistência no banco de dados — ocorra sem erros silenciosos ou inconsistências. Além disso, o sistema conta com um motor de aprendizado automático para identificar janelas de spawn baseadas no histórico real de eventos.
 
 ## 🏗️ Arquitetura e Estrutura do Sistema
 
 O projeto segue uma arquitetura baseada em camadas para garantir a separação de responsabilidades e facilitar a manutenção:
 
 * **Camada de Ingestão (Providers)**: Responsável pela comunicação externa e normalização primária dos dados brutos. Utiliza `TypedDict` para garantir contratos de dados rígidos desde a entrada.
-* **Camada de Serviços (Services)**: Contém a lógica de negócio central. Realiza a sanitização de dados (trimming e conversão de vazios para nulos) e orquestra a validação antes da persistência.
+* **Camada de Serviços (Services)**: Contém a lógica de negócio central. Realiza a sanitização de dados, orquestra a validação e gerencia o `MetadataLearningService` para recalibração de intervalos.
+* **Camada de Eventos (Signals)**: Automação que utiliza Django Signals para disparar o aprendizado de metadados sempre que uma nova morte ou "puff" é registrado.
 * **Camada de Persistência (Repositories)**: Abstrai a lógica do banco de dados (Django ORM), permitindo que o serviço foque na regra de negócio enquanto o repositório lida com a criação de registros e relacionamentos complexos.
 * **Helpers e Validadores**: Utilitários globais para sanitização recursiva e um pipeline de validação/normalização que assegura que apenas dados válidos cheguem ao banco.
+
+## 🧠 Motor de Aprendizado (Metadata Learning)
+
+O sistema analisa automaticamente o histórico de `MonsterSpawnEvent` para gerar inteligência:
+
+* **Detecção de Janelas**: Identifica os intervalos mínimo e máximo observados entre aparições.
+* **Tratamento de Outliers**: Filtra erros de log ignorando intervalos inferiores a 24 horas (`delta.days >= 1`).
+* **Puff & Kill**: Trata desaparecimentos (puffs) e mortes confirmadas com o mesmo peso estatístico para reset de janela.
+* **Cold Start**: O aprendizado inicia a partir da segunda ocorrência registrada para evitar ruído estatístico.
 
 ## 📂 Fluxo de Gestão de Arquivos (Data Pipeline)
 
@@ -26,10 +36,10 @@ O sistema gerencia o estado da ingestão através de uma estrutura de diretório
 ## 🛠️ Tecnologias e Estratégia de Qualidade
 
 * **Framework**: Django e Django REST Framework.
-* **Banco de Dados**: PostgreSQL (escolhido pela robustez e suporte a tipos complexos).
+* **Banco de Dados**: PostgreSQL com uso de Window Functions (`LAG`) para análise temporal de alta performance.
 * **I18n**: Suporte total a localização e tradução via arquivos `.po/.mo` (Locales).
 * **Análise Estática**: Uso rigoroso de `Mypy` para verificação de tipos e `Ruff/Black` para padronização de estilo.
-* **Testes**: Suite baseada em `Pytest` com foco em testes de integração reais, garantindo que o fluxo Payload -> Service -> Repository -> DB funcione integralmente.
+* **Testes**: Suíte baseada em `Pytest` com foco em testes de integração reais, garantindo que o fluxo Payload -> Service -> Repository -> DB funcione integralmente.
 
 ---
 
@@ -38,7 +48,7 @@ O sistema gerencia o estado da ingestão através de uma estrutura de diretório
 ### 1. Clonar e Acessar o Projeto
 
 `powershell
-git clone <https://github.com/seu-usuario/otmundi.git>
+git clone <https://github.com/fcno/otmundi.git>
 cd otmundi
 `
 
@@ -48,7 +58,7 @@ cd otmundi
 python -m venv venv
 
 # Ativar no Windows (PowerShell)
-.\\\\venv\\\\Scripts\\\\activate
+.\venv\Scripts\activate
 
 # Ativar no Linux ou Mac
 source venv/bin/activate
@@ -91,8 +101,8 @@ python manage.py ingest_killstats nome_do_arquivo.json
 
 O projeto utiliza um pipeline de validação para impedir a entrada de código que não siga os padrões estabelecidos:
 
-* **Validação Completa**: `.\\\\scripts\\\\validate.ps1`
-* **Rodar Testes**: `pytest` (Os testes garantem a integridade de todos os campos de métricas e o isolamento de locales).
+* **Validação Completa**: `.\scripts\validate.ps1`
+* **Rodar Testes**: `pytest` (Os testes garantem a integridade de todos os campos de métricas, o isolamento de locales e o aprendizado de metadados).
 * **Formatar Código**: `black .`
 * **Verificar Linter**: `ruff check . --fix`
 * **Análise de Tipos**: `mypy .` (Obrigatório passar sem erros de análise semântica).
@@ -111,8 +121,9 @@ cz commit
 
 ## 📂 Organização de Pastas Importantes
 
-* `apps/ingestion`: Lógica de entrada de dados, Providers, Services e Commands.
-* `apps/core`: Helpers de sanitização, validadores base e exceções customizadas.
-* `apps/snapshots`: Modelos de dados para registros históricos.
-* `apps/killstats`: Modelos específicos de estatísticas de morte por criatura.
-* `data/`: Estrutura de diretórios para o pipeline de arquivos (pending, imported, error).
+* **apps/ingestion**: Lógica de entrada de dados, Providers, Services e Commands.
+* **apps/killstats**: Modelos específicos de estatísticas de morte, aprendizado de metadados e Signals.
+* **apps/monsters**: Definições de criaturas e metadados calculados.
+* **apps/core**: Helpers de sanitização, validadores base e exceções customizadas.
+* **apps/snapshots**: Modelos de dados para registros históricos.
+* **data/**: Estrutura de diretórios para o pipeline de arquivos (pending, imported, error).
