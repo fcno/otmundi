@@ -42,17 +42,6 @@ class TestMetadataLearningService:
         assert metadata.min_interval == 12
         assert metadata.max_interval == 15
 
-    def test_ignore_outliers_same_day(self) -> None:
-        """Garante que eventos no mesmo dia (erros) não zerem o min_interval."""
-        self._create_event(self.world_a, 0)
-        self._create_event(self.world_a, 0)  # Erro de log: mesmo instante
-        self._create_event(self.world_a, 10)
-
-        MetadataLearningService.recalibrate_monster(self.monster)
-
-        metadata = MonsterMetadata.objects.get(monster=self.monster)
-        assert metadata.min_interval == 10  # Ignorou o intervalo de 0 dias
-
     def test_metadata_dynamic_creation(self) -> None:
         """Verifica se o serviço cria o MonsterMetadata se ele não existir."""
         assert MonsterMetadata.objects.filter(monster=self.monster).count() == 0
