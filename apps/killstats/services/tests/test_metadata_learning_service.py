@@ -87,3 +87,25 @@ class TestMetadataLearningService:
 
         assert MonsterMetadata.objects.get(monster=self.monster).min_interval == 10
         assert MonsterMetadata.objects.get(monster=monster2).min_interval == 7
+
+    def test_cold_start_behavior(self) -> None:
+        """
+        Garante que o sistema se comporta corretamente do zero:
+        1. Primeira kill: Não cria metadados (falta de dados comparativos).
+        2. Segunda kill: Cria metadados com min/max idênticos.
+        """
+        # 1. Primeira Kill
+        self._create_event(self.world_a, 20)
+        MetadataLearningService.recalibrate_monster(self.monster)
+        assert not MonsterMetadata.objects.filter(monster=self.monster).exists()
+
+        # 2. Segunda Kill (Hoje)
+        self._create_event(self.world_a, 0)
+        MetadataLearningService.recalibrate_monster(self.monster)
+
+        assert MonsterMetadata.objects.filter(monster=self.monster).exists()
+
+        metadata = MonsterMetadata.objects.get(monster=self.monster)
+        # O único intervalo observado é de 20 dias
+        assert metadata.min_interval == 20
+        assert metadata.max_interval == 20

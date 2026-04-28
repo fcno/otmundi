@@ -11,6 +11,8 @@ from apps.killstats.services.metadata_learning_service import MetadataLearningSe
 def trigger_metadata_learning(
     sender: Any, instance: MonsterSpawnEvent, created: bool, **kwargs: Any
 ) -> None:
+    """
+    Gatilho automático para recalibração de metadados após o registro de um spawn.
+    """
     if created:
-        # Quando um novo evento nasce, reavaliamos o monstro
         MetadataLearningService.recalibrate_monster(instance.monster)
