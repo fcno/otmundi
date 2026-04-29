@@ -38,3 +38,6 @@ data/*
 # permite os arquivos de estrutura
 !data/.gitkeep
 !data/*/.gitkeep
+
+# tailwind
+theme/static/css/dist/
