@@ -1,0 +1,21 @@
+{% load i18n %}
+<article class="card border border-base-300 transition-all duration-300 {% if active %}bg-base-100 hover:border-primary{% else %}bg-base-200 opacity-60{% endif %}">
+    <div class="card-body">
+        <div class="flex justify-between items-start">
+            <h2 class="card-title text-2xl font-bold">{{ title }}</h2>
+            <div class="badge {% if active %}badge-primary badge-outline{% else %}badge-ghost{% endif %}">
+                {{ status_text }}
+            </div>
+        </div>
+        <p class="text-sm text-base-content/80 my-4">
+            {{ description }}
+        </p>
+        <div class="card-actions justify-end mt-4">
+            {% if active %}
+                <a href="{% url url %}" class="btn btn-primary btn-block">{% translate "Acessar" %}</a>
+            {% else %}
+                <button class="btn btn-disabled btn-block" disabled>{% translate "Em breve" %}</button>
+            {% endif %}
+        </div>
+    </div>
+</article>

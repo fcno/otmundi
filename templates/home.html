@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Início" %}{% endblock %}
+
+{% block content %}
+<div class="py-8">
+    {# Cabeçalho da Página #}
+    <header class="mb-10 text-center lg:text-left">
+        <h1 class="text-4xl font-black uppercase tracking-tight">{% translate "Painel de Controle" %}</h1>
+        <p class="text-base-content/70 mt-2">{% translate "Selecione um módulo para gerenciar o servidor." %}</p>
+    </header>
+
+    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% include "components/module_card.html" with active=True title="Monitor de Bosses" status_text="Ativo" description="Previsões de aparecimento baseadas nas últimas mortes registradas (atualização diária)." url="killstats:boss_monitor" %}
+        
+        {% include "components/module_card.html" with active=False title="Kill Stats" status_text="Bloqueado" description="Análise de frequência de respawn e contagem total de mortes por mundo." %}
+    </section>
+</div>
+{% endblock %}
