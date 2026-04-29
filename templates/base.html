@@ -1,5 +1,4 @@
 {% load static tailwind_tags django_browser_reload %}
-{% load static tailwind_tags %}
 <!DOCTYPE html>
 <html lang="pt-br" data-theme="dark">
 <head>
@@ -12,43 +11,41 @@
     {# HTMX para interatividade moderna no monolito #}
     <script src="https://unpkg.com/htmx.org@1.9.10" defer></script>
 </head>
-<body class="min-h-screen flex flex-col bg-base-200 text-base-content font-sans">
+<body class="min-h-screen flex flex-col bg-base-100 text-base-content">
 
-    {# Navbar (DaisyUI) #}
-    <header class="navbar bg-base-100 shadow-md px-4 lg:px-8 border-b border-base-300">
+    {# Navbar Pura DaisyUI #}
+    <header class="navbar bg-base-100 px-4">
         <div class="flex-1">
-            <a href="/" class="text-2xl font-black tracking-tighter text-primary">
-                OT<span class="text-base-content">MUNDI</span>
+            <a href="/" class="btn btn-ghost text-xl font-black tracking-tighter">
+                OT<span class="text-primary">MUNDI</span>
             </a>
         </div>
         <nav class="flex-none">
             <ul class="menu menu-horizontal px-1 gap-2">
-                <li><a href="/" class="rounded-lg hover:bg-primary hover:text-primary-content transition-colors">Dashboard</a></li>
+                <li><a href="/" class="rounded-btn">Dashboard</a></li>
                 {% if user.is_authenticated %}
-                    <li><a class="btn btn-ghost btn-sm">Meu Perfil</a></li>
+                    <li><a href="#" class="btn btn-ghost btn-sm">Meu Perfil</a></li>
                 {% else %}
-                    <li><a class="btn btn-primary btn-sm px-6">Login</a></li>
+                    <li><a href="#" class="btn btn-primary btn-sm">Login</a></li>
                 {% endif %}
             </ul>
         </nav>
     </header>
 
     {# Área de Conteúdo Principal #}
-    <main class="flex-grow container mx-auto p-6">
+    <main class="grow container mx-auto p-4">
         {% block content %}
-        {# O conteúdo de cada módulo será inserido aqui #}
         {% endblock %}
     </main>
 
-    {# Footer #}
-    <footer class="footer footer-center p-6 bg-base-100 text-base-content border-t border-base-300">
+    {# Footer DaisyUI #}
+    <footer class="footer footer-center p-10 bg-base-100">
         <aside>
-            <p class="font-bold">Otmundi Project</p> 
+            <p class="font-bold text-lg">Otmundi Project</p> 
             <p>Monitoramento Inteligente de Bosses © 2026</p>
         </aside>
     </footer>
 
-    {# Suporte ao Hot Reload (apenas em desenvolvimento) #}
     {% if debug %}
         {% django_browser_reload_script %}
     {% endif %}
