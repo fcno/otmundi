@@ -10,6 +10,7 @@ dependencies = [
     "django-extensions",
     "django-environ",
     "psycopg[binary]",
+    "django-tailwind",
 ]
 
 [project.optional-dependencies]
@@ -21,6 +22,7 @@ dev = [
     "django-stubs",
     "djangorestframework-stubs",
     "commitizen",
+    "django-browser-reload",
 ]
 
 [tool.black]
