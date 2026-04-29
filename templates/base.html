@@ -1,4 +1,4 @@
-{% load static tailwind_tags django_browser_reload %}
+{% load static tailwind_tags django_browser_reload i18n %}
 <!DOCTYPE html>
 <html lang="pt-br" data-theme="dark">
 <head>
@@ -8,12 +8,10 @@
     
     {% tailwind_css %}
     
-    {# HTMX para interatividade moderna no monolito #}
-    <script src="https://unpkg.com/htmx.org@1.9.10" defer></script>
+    <script src="{% static 'vendor/htmx.min.js' %}" defer></script>
 </head>
 <body class="min-h-screen flex flex-col bg-base-100 text-base-content">
 
-    {# Navbar Pura DaisyUI #}
     <header class="navbar bg-base-100 px-4">
         <div class="flex-1">
             <a href="/" class="btn btn-ghost text-xl font-black tracking-tighter">
@@ -22,11 +20,11 @@
         </div>
         <nav class="flex-none">
             <ul class="menu menu-horizontal px-1 gap-2">
-                <li><a href="/" class="rounded-btn">Dashboard</a></li>
+                <li><a href="/" class="rounded-btn">{% translate "Dashboard" %}</a></li>
                 {% if user.is_authenticated %}
-                    <li><a href="#" class="btn btn-ghost btn-sm">Meu Perfil</a></li>
+                    <li><a href="#" class="btn btn-ghost btn-sm">{% translate "Meu Perfil" %}</a></li>
                 {% else %}
-                    <li><a href="#" class="btn btn-primary btn-sm">Login</a></li>
+                    <li><a href="#" class="btn btn-primary btn-sm">{% translate "Login" %}</a></li>
                 {% endif %}
             </ul>
         </nav>
@@ -38,11 +36,10 @@
         {% endblock %}
     </main>
 
-    {# Footer DaisyUI #}
     <footer class="footer footer-center p-10 bg-base-100">
         <aside>
             <p class="font-bold text-lg">Otmundi Project</p> 
-            <p>Monitoramento Inteligente de Bosses © 2026</p>
+            <p>{% translate "Monitoramento Inteligente de Bosses" %} © {% now "Y" %}</p>
         </aside>
     </footer>
 

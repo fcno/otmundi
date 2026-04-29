@@ -26,9 +26,6 @@ Thumbs.db
 # Playwright / scraping
 playwright-profile/
 
-# arquivos gerados
-*.json
-
 # ignora tudo dentro de data
 data/*
 
@@ -40,4 +37,9 @@ data/*
 !data/*/.gitkeep
 
 # tailwind
+node_modules/
 theme/static/css/dist/
+
+# Garante que as configurações de frontend SEJAM versionadas
+!theme/static_src/package.json
+!theme/static_src/package-lock.json
