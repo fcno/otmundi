@@ -27,10 +27,9 @@ class BossMonitorView(BaseView):
 
     def get_queryset(self) -> QuerySet[Monster]:
         """
-        Retorna apenas monstros que possuem metadados configurados (bosses),
-        já trazendo os metadados para evitar múltiplas consultas ao banco (N+1).
+        Retorna apenas os monstros marcados explicitamente para exibição.
         """
-        return Monster.objects.all()
+        return Monster.objects.filter(is_active=True)
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)

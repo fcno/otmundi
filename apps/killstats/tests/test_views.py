@@ -14,13 +14,13 @@ from apps.worlds.models.world import World
 
 @pytest.mark.django_db
 class TestBossMonitorView:
-    def test_view_lists_all_monsters_regardless_of_metadata(
+    def test_view_lists_active_monsters_regardless_of_metadata(
         self, client: Client
     ) -> None:
         """Valida que a view exibe todos os monstros, mesmo sem metadados."""
         World.objects.create(name="antica")
-        Monster.objects.create(name="orshabaal")
-        Monster.objects.create(name="rat")
+        Monster.objects.create(name="orshabaal", is_active=True)
+        Monster.objects.create(name="rat", is_active=True)
 
         url = reverse("killstats:boss_monitor")
         response = client.get(url)
@@ -78,39 +78,39 @@ class TestBossMonitorView:
 
         # Criando os dados para forçar cada status
         # 1. Overdue
-        m1 = Monster.objects.create(name="overdue_boss")
+        m1 = Monster.objects.create(name="overdue_boss", is_active=True)
         MonsterMetadata.objects.create(monster=m1, min_interval=5, max_interval=10)
         MonsterSpawnEvent.objects.create(
             monster=m1, world=world, timestamp=now - timedelta(days=11)
         )
 
         # 2. Expected High (100%)
-        m2 = Monster.objects.create(name="expected_high")
+        m2 = Monster.objects.create(name="expected_high", is_active=True)
         MonsterMetadata.objects.create(monster=m2, min_interval=5, max_interval=10)
         MonsterSpawnEvent.objects.create(
             monster=m2, world=world, timestamp=now - timedelta(days=10)
         )
 
         # 3. Expected Low (50%)
-        m3 = Monster.objects.create(name="expected_low")
+        m3 = Monster.objects.create(name="expected_low", is_active=True)
         MonsterMetadata.objects.create(monster=m3, min_interval=10, max_interval=20)
         MonsterSpawnEvent.objects.create(
             monster=m3, world=world, timestamp=now - timedelta(days=15)
         )
 
         # 4. No Chance
-        m4 = Monster.objects.create(name="no_chance_boss")
+        m4 = Monster.objects.create(name="no_chance_boss", is_active=True)
         MonsterMetadata.objects.create(monster=m4, min_interval=10, max_interval=20)
         MonsterSpawnEvent.objects.create(
             monster=m4, world=world, timestamp=now - timedelta(days=2)
         )
 
         # 5 e 6. Collecting (Empate por nome)
-        Monster.objects.create(name="b_collecting")
-        Monster.objects.create(name="a_collecting")
+        Monster.objects.create(name="b_collecting", is_active=True)
+        Monster.objects.create(name="a_collecting", is_active=True)
 
         # 7. Missing
-        m7 = Monster.objects.create(name="missing_boss")
+        m7 = Monster.objects.create(name="missing_boss", is_active=True)
         MonsterMetadata.objects.create(monster=m7, min_interval=5, max_interval=10)
         MonsterSpawnEvent.objects.create(
             monster=m7, world=world, timestamp=now - timedelta(days=30)
@@ -128,3 +128,18 @@ class TestBossMonitorView:
         assert bosses[4].name == "missing_boss"  # Peso 3
         assert bosses[5].name == "a_collecting"  # Peso 4, Alfabético A
         assert bosses[6].name == "b_collecting"  # Peso 4, Alfabético B
+
+    def test_view_filters_inactive_monsters(self, client: Client) -> None:
+        """Garante que monstros com is_active=False não apareçam na lista."""
+        World.objects.create(name="antica")
+        # Um ativo e um inativo
+        Monster.objects.create(name="visible_boss", is_active=True)
+        Monster.objects.create(name="hidden_boss_1", is_active=False)
+        Monster.objects.create(name="hidden_boss_2", is_active=False)
+
+        url = reverse("killstats:boss_monitor")
+        response = client.get(url)
+
+        bosses = response.context["bosses"]
+        assert len(bosses) == 1
+        assert bosses[0].name == "visible_boss"
