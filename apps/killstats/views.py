@@ -34,22 +34,45 @@ class BossMonitorView(BaseView):
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
 
-        # 1. Identifica o mundo
+        # 1. Identifica o mundo e o usuário
+        user = self.request.user
         world = World.objects.first()
 
         if not world:
             context["prediction_enabled"] = False
             return context
 
-        # 2. Calcula a predição para cada boss
+        # 2. Mapeia preferências do usuário se estiver autenticado
+        user_prefs = {}
+        if user.is_authenticated:
+            from apps.preferences.models.user_monster_preference import (
+                UserMonsterPreference,
+            )
+
+            user_prefs = {
+                p.monster_id: p for p in UserMonsterPreference.objects.filter(user=user)
+            }
+
+        # 3. Calcula a predição para cada boss injetando dados de predição e preferências em cada objeto de boss
         for boss in context["bosses"]:
             boss.prediction = PredictionService.get_prediction(boss, world)
 
-        # 3. Ordenação usando a propriedade do Enum
+            # Extrai flags de preferência ou usa False como padrão
+            pref = user_prefs.get(boss.id)
+            boss.is_pinned = pref.is_pinned if pref else False
+            boss.is_low_priority = pref.is_low_priority if pref else False
+
+        # 4. Ordenação multinível usando preferêncis e Enum
+        # 1. is_pinned (Topo)
+        # 2. is_low_priority (Fundo)
+        # 3. Status Weight (Regras de Overdue/Expected/etc)
+        # 4. Chance % (Maior primeiro)
+        # 5. Nome (Alfabético)
         context["bosses"] = sorted(
             context["bosses"],
             key=lambda b: (
-                # Buscamos o membro do Enum pela string status_code para acessar o .weight
+                not b.is_pinned,
+                b.is_low_priority,
                 PredictionStatus[b.prediction["status_code"]].weight,
                 -b.prediction["chance_percentage"],
                 b.name,

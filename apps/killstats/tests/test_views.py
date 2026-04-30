@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 import pytest
+from django.contrib.auth import get_user_model
 from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
@@ -9,7 +10,10 @@ from apps.killstats.models.monster_spawn_event import MonsterSpawnEvent
 from apps.killstats.services.prediction_service import PredictionStatus
 from apps.monsters.models.monster import Monster
 from apps.monsters.models.monster_metadata import MonsterMetadata
+from apps.preferences.models.user_monster_preference import UserMonsterPreference
 from apps.worlds.models.world import World
+
+User = get_user_model()
 
 
 @pytest.mark.django_db
@@ -171,3 +175,68 @@ class TestBossMonitorView:
         assert len(response.context["bosses"]) == 0
         # No banco de dados o evento deve existir (Proposta 1)
         assert MonsterSpawnEvent.objects.filter(monster__name="silent_boss").exists()
+
+    def test_view_sorting_with_user_preferences(self, client: Client) -> None:
+        """
+        Caso de borda extremo: Valida a hierarquia Pin > Status > Low Priority.
+        1. 'rat' (Collecting - Peso 4) está PINNED -> Deve ir para o topo.
+        2. 'orshabaal' (Overdue - Peso 0) é LOW PRIORITY -> Deve ir para o final.
+        """
+        world = World.objects.create(name="antica")
+        user = User.objects.create_user(username="test_sorter", password="pw")
+        client.force_login(user)
+
+        # Criando monstro que seria o último (Collecting), mas será PINNED
+        m_pin = Monster.objects.create(name="rat", is_active=True)
+        UserMonsterPreference.objects.create(user=user, monster=m_pin, is_pinned=True)
+
+        # Criando monstro que seria o primeiro (Overdue), mas será LOW PRIORITY
+        m_low = Monster.objects.create(name="orshabaal", is_active=True)
+        MonsterMetadata.objects.create(monster=m_low, min_interval=5, max_interval=10)
+        MonsterSpawnEvent.objects.create(
+            monster=m_low, world=world, timestamp=timezone.now() - timedelta(days=11)
+        )
+        UserMonsterPreference.objects.create(
+            user=user, monster=m_low, is_low_priority=True
+        )
+
+        # Monstro normal (Expected - Peso 1) para ficar no meio
+        m_norm = Monster.objects.create(name="normal_boss", is_active=True)
+        MonsterMetadata.objects.create(monster=m_norm, min_interval=5, max_interval=10)
+        MonsterSpawnEvent.objects.create(
+            monster=m_norm, world=world, timestamp=timezone.now() - timedelta(days=7)
+        )
+
+        response = client.get(reverse("killstats:boss_monitor"))
+        bosses = response.context["bosses"]
+
+        # Verificação da nova hierarquia de visualização personalizada[cite: 8]
+        assert bosses[0].name == "rat"  # Pinned ignora status peso 4
+        assert bosses[1].name == "normal_boss"  # Ordem normal de status
+        assert bosses[2].name == "orshabaal"  # Low Priority ignora status peso 0
+
+    def test_anonymous_user_sees_default_sorting(self, client: Client) -> None:
+        """Garante que as preferências de um usuário não afetam visitantes anônimos."""
+        world = World.objects.create(name="antica")
+        user = User.objects.create_user(username="other_user", password="pw")
+
+        m_overdue = Monster.objects.create(name="overdue_boss", is_active=True)
+        MonsterMetadata.objects.create(
+            monster=m_overdue, min_interval=5, max_interval=10
+        )
+        MonsterSpawnEvent.objects.create(
+            monster=m_overdue,
+            world=world,
+            timestamp=timezone.now() - timedelta(days=11),
+        )
+        # Este usuário prefere o overdue no final
+        UserMonsterPreference.objects.create(
+            user=user, monster=m_overdue, is_low_priority=True
+        )
+
+        # Visitante anônimo acessa a página
+        response = client.get(reverse("killstats:boss_monitor"))
+        bosses = response.context["bosses"]
+
+        # Para o anônimo, a ordem deve ser a padrão de status (Overdue primeiro)[cite: 8]
+        assert bosses[0].name == "overdue_boss"

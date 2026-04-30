@@ -17,11 +17,12 @@ class TestUserMonsterPreference:
 
     def test_preference_creation_and_fields(self) -> None:
         """Testa a criação com campos específicos e o timestamp de atualização."""
+        # Comentário: Campos atualizados para is_low_priority e is_pinned[cite: 7, 10]
         pref = UserMonsterPreference.objects.create(
-            user=self.user, monster=self.monster, is_hidden=True, is_favorite=True
+            user=self.user, monster=self.monster, is_low_priority=True, is_pinned=True
         )
-        assert pref.is_hidden is True
-        assert pref.is_favorite is True
+        assert pref.is_low_priority is True
+        assert pref.is_pinned is True
         assert pref.updated_at is not None
 
     def test_unique_constraint_user_monster(self) -> None:
