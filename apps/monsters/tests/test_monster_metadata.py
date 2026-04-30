@@ -9,7 +9,7 @@ from apps.monsters.models.monster_metadata import MonsterMetadata
 class TestMonsterMetadata:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
-        self.monster = Monster.objects.create(name="Orshabaal")
+        self.monster = Monster.objects.create(name="Orshabaal", is_active=True)
 
     def test_create_metadata_with_null_intervals(self) -> None:
         """Valida que o sistema aceita intervalos nulos (Cenário Cold Start)."""

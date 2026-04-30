@@ -16,7 +16,7 @@ class TestMonsterEventIngestService:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
         self.service = MonsterEventIngestService()
-        self.monster = Monster.objects.create(name="orshabaal")
+        self.monster = Monster.objects.create(name="orshabaal", is_active=True)
         self.world = World.objects.create(name="antica")
 
     def test_create_event_from_ingestion_fields_integrity(self) -> None:
@@ -52,7 +52,7 @@ class TestMonsterEventIngestService:
         Garante que o serviço vincula o evento ao monstro correto
         mesmo se múltiplos forem processados.
         """
-        ferumbras = Monster.objects.create(name="ferumbras")
+        ferumbras = Monster.objects.create(name="ferumbras", is_active=True)
         now = timezone.now()
 
         event_orsh = self.service.create_event_from_ingestion(

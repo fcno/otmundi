@@ -15,7 +15,7 @@ class TestMonsterSpawnEvent:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
         self.world = World.objects.create(name="Antica")
-        self.monster = Monster.objects.create(name="Orshabaal")
+        self.monster = Monster.objects.create(name="Orshabaal", is_active=True)
         self.user = User.objects.create_user(username="mod_test", password="123")
 
     def test_spawn_event_full_creation(self) -> None:

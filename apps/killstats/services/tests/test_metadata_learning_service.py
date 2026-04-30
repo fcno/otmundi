@@ -14,7 +14,7 @@ from apps.worlds.models.world import World
 class TestMetadataLearningService:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
-        self.monster = Monster.objects.create(name="ferumbras")
+        self.monster = Monster.objects.create(name="ferumbras", is_active=True)
         self.world_a = World.objects.create(name="antica")
         self.world_b = World.objects.create(name="belobra")
         self.now = timezone.now()
@@ -71,7 +71,7 @@ class TestMetadataLearningService:
 
     def test_full_recalibration_batch(self) -> None:
         """Testa o processamento em lote para todos os monstros."""
-        monster2 = Monster.objects.create(name="orshabaal")
+        monster2 = Monster.objects.create(name="orshabaal", is_active=True)
         self._create_event(self.world_a, 0)  # Ferumbras
         self._create_event(self.world_a, 10)
 

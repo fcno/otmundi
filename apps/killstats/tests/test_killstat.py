@@ -18,7 +18,7 @@ def test_create_killstat() -> None:
         source_file="file.json",
     )
 
-    monster = Monster.objects.create(name="Dragon")
+    monster = Monster.objects.create(name="Dragon", is_active=True)
 
     ks = KillStat.objects.create(
         snapshot=snapshot,
@@ -48,7 +48,7 @@ def test_unique_snapshot_monster() -> None:
         source_file="file.json",
     )
 
-    monster = Monster.objects.create(name="Dragon")
+    monster = Monster.objects.create(name="Dragon", is_active=True)
 
     KillStat.objects.create(
         snapshot=snapshot,

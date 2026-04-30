@@ -18,7 +18,7 @@ class TestPredictionService:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
         self.world = World.objects.create(name="Antica")
-        self.monster = Monster.objects.create(name="Orshabaal")
+        self.monster = Monster.objects.create(name="Orshabaal", is_active=True)
         # Janela de 10 a 20 dias (Total de 11 dias possíveis)
         self.metadata = MonsterMetadata.objects.create(
             monster=self.monster, min_interval=10, max_interval=20
@@ -99,7 +99,7 @@ class TestPredictionService:
     def test_status_collecting_no_metadata_record(self) -> None:
         """Garante status COLLECTING se o registro de metadados nem existir."""
         # Criamos um monstro novo sem criar o MonsterMetadata para ele
-        new_monster = Monster.objects.create(name="Morgaroth")
+        new_monster = Monster.objects.create(name="Morgaroth", is_active=True)
         result = PredictionService.get_prediction(new_monster, self.world)
 
         assert result["status_code"] == PredictionStatus.COLLECTING.value

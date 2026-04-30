@@ -13,7 +13,7 @@ from apps.worlds.models.world import World
 class TestKillstatsSignals:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
-        self.monster = Monster.objects.create(name="gaz'haragoth")
+        self.monster = Monster.objects.create(name="gaz'haragoth", is_active=True)
         self.world = World.objects.create(name="ferobra")
         self.now = timezone.now()
 
@@ -70,7 +70,7 @@ class TestKillstatsSignals:
         """
         Garante que o evento de um monstro não afeta o metadado de outro.
         """
-        other_monster = Monster.objects.create(name="morgaroth")
+        other_monster = Monster.objects.create(name="morgaroth", is_active=True)
 
         # Criamos evento para o Gaz'haragoth
         MonsterSpawnEvent.objects.create(

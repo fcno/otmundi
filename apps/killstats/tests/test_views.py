@@ -44,7 +44,7 @@ class TestBossMonitorView:
 
     def test_view_prediction_disabled_no_world(self, client: Client) -> None:
         """Testa o comportamento quando não há nenhum mundo cadastrado."""
-        Monster.objects.create(name="orshabaal")
+        Monster.objects.create(name="orshabaal", is_active=True)
 
         url = reverse("killstats:boss_monitor")
         response = client.get(url)
@@ -130,9 +130,10 @@ class TestBossMonitorView:
         assert bosses[6].name == "b_collecting"  # Peso 4, Alfabético B
 
     def test_view_filters_inactive_monsters(self, client: Client) -> None:
-        """Garante que monstros com is_active=False não apareçam na lista."""
+        """Garante que monstros inativos não aparecem e não são processados."""
         World.objects.create(name="antica")
-        # Um ativo e um inativo
+
+        # Setup: 1 Ativo e 2 Inativos
         Monster.objects.create(name="visible_boss", is_active=True)
         Monster.objects.create(name="hidden_boss_1", is_active=False)
         Monster.objects.create(name="hidden_boss_2", is_active=False)
@@ -141,5 +142,32 @@ class TestBossMonitorView:
         response = client.get(url)
 
         bosses = response.context["bosses"]
+
+        # 1. Validação de Quantidade: Apenas o ativo deve estar presente
         assert len(bosses) == 1
         assert bosses[0].name == "visible_boss"
+
+        # 2. Validação Extrema: Garante que os inativos não existem no queryset
+        active_names = [b.name for b in bosses]
+        assert "hidden_boss_1" not in active_names
+        assert "hidden_boss_2" not in active_names
+
+    def test_view_ignores_inactive_monsters_but_keeps_data(
+        self, client: Client
+    ) -> None:
+        """Valida que dados de monstros inativos existem no banco, mas são filtrados na View."""
+        world = World.objects.create(name="antica")
+        m1 = Monster.objects.create(name="silent_boss", is_active=False)
+
+        # Cria evento para o monstro inativo
+        MonsterSpawnEvent.objects.create(
+            monster=m1, world=world, timestamp=timezone.now()
+        )
+
+        url = reverse("killstats:boss_monitor")
+        response = client.get(url)
+
+        # Na View não aparece nada
+        assert len(response.context["bosses"]) == 0
+        # No banco de dados o evento deve existir (Proposta 1)
+        assert MonsterSpawnEvent.objects.filter(monster__name="silent_boss").exists()
