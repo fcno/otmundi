@@ -104,3 +104,25 @@ class TestPredictionService:
 
         assert result["status_code"] == PredictionStatus.COLLECTING.value
         assert result["chance_percentage"] == 0.0
+
+    def test_enum_weights_priority_order(self) -> None:
+        """Valida que a hierarquia de pesos segue a urgência de exibição."""
+        # Quanto menor o peso, maior a prioridade
+        assert PredictionStatus.OVERDUE.weight < PredictionStatus.EXPECTED.weight
+        assert PredictionStatus.EXPECTED.weight < PredictionStatus.NO_CHANCE.weight
+        assert PredictionStatus.NO_CHANCE.weight < PredictionStatus.COLLECTING.weight
+        assert PredictionStatus.COLLECTING.weight < PredictionStatus.MISSING.weight
+
+    def test_all_enum_weights_are_correct(self) -> None:
+        """Valida a hierarquia completa de pesos para ordenação."""
+        assert PredictionStatus.OVERDUE.weight == 0
+        assert PredictionStatus.EXPECTED.weight == 1
+        assert PredictionStatus.NO_CHANCE.weight == 2
+        assert PredictionStatus.COLLECTING.weight == 3
+        assert PredictionStatus.MISSING.weight == 4
+
+    def test_weight_is_consistent_with_status_code(self) -> None:
+        """Garante que acessar pelo status_code (string) mantém o peso."""
+        for status in PredictionStatus:
+            # Simula o que a View faz: PredictionStatus['OVERDUE'].weight
+            assert PredictionStatus[status.value].weight == status.weight

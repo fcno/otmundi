@@ -19,6 +19,18 @@ class PredictionStatus(models.TextChoices):
     OVERDUE = "OVERDUE", _("Overdue")
     MISSING = "MISSING", _("Missing/Probable Puff")
 
+    @property
+    def weight(self) -> int:
+        """Define o peso de ordenação para cada status."""
+        weights = {
+            self.OVERDUE: 0,
+            self.EXPECTED: 1,
+            self.NO_CHANCE: 2,
+            self.COLLECTING: 3,
+            self.MISSING: 4,
+        }
+        return weights.get(self, 99)
+
 
 class PredictionResult(TypedDict):
     """Estrutura de dados tipada para o retorno da predição."""
@@ -84,9 +96,9 @@ class PredictionService:
             return PredictionStatus.NO_CHANCE
         if min_d <= days <= max_d:
             return PredictionStatus.EXPECTED
-        if days > (max_d * 1.2):
-            return PredictionStatus.MISSING
-        return PredictionStatus.OVERDUE
+        if days <= (max_d * 1.2):
+            return PredictionStatus.OVERDUE
+        return PredictionStatus.MISSING
 
     @staticmethod
     def _calculate_chance(days: int, min_d: int, max_d: int) -> float:
