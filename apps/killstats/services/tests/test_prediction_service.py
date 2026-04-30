@@ -95,3 +95,12 @@ class TestPredictionService:
         result = PredictionService.get_prediction(self.monster, self.world)
         # Verifica se o texto traduzido (label) não é igual à chave do enum
         assert result["status"] == str(PredictionStatus.NO_CHANCE.label)
+
+    def test_status_collecting_no_metadata_record(self) -> None:
+        """Garante status COLLECTING se o registro de metadados nem existir."""
+        # Criamos um monstro novo sem criar o MonsterMetadata para ele
+        new_monster = Monster.objects.create(name="Morgaroth")
+        result = PredictionService.get_prediction(new_monster, self.world)
+
+        assert result["status_code"] == PredictionStatus.COLLECTING.value
+        assert result["chance_percentage"] == 0.0
