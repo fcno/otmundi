@@ -25,6 +25,7 @@
                         <th>Boss</th>
                         <th>Status</th>
                         <th>Probabilidade</th>
+                        <th>Janela (Dias)</th>
                         <th>Última Aparição</th>
                     </tr>
                 </thead>
@@ -49,6 +50,15 @@
                                 <progress class="progress progress-primary w-20" value="{{ boss.prediction.chance_percentage }}" max="100"></progress>
                                 <span>{{ boss.prediction.chance_percentage }}%</span>
                             </div>
+                        </td>
+                        <td>
+                            {% if boss.prediction.min_interval and boss.prediction.max_interval %}
+                                <span class="text-sm">
+                                    {{ boss.prediction.min_interval }} - {{ boss.prediction.max_interval }}
+                                </span>
+                            {% else %}
+                                <span class="text-base-content/30 italic">? - ?</span>
+                            {% endif %}
                         </td>
                         <td>
                             {% if boss.prediction.last_spawn %}
