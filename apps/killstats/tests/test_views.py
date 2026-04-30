@@ -69,9 +69,9 @@ class TestBossMonitorView:
         2. Expected (Peso 1) - Maior chance primeiro
         3. Expected (Peso 1) - Menor chance depois
         4. No Chance (Peso 2)
-        5. Collecting (Peso 3) - Ordem Alfabética (A)
-        6. Collecting (Peso 3) - Ordem Alfabética (B)
-        7. Missing (Peso 4)
+        5. Missing (Peso 3)
+        6. Collecting (Peso 4) - Ordem Alfabética (A)
+        7. Collecting (Peso 4) - Ordem Alfabética (B)
         """
         world = World.objects.create(name="antica")
         now = timezone.now()
@@ -125,6 +125,6 @@ class TestBossMonitorView:
         assert bosses[1].name == "expected_high"  # Peso 1, Chance 100
         assert bosses[2].name == "expected_low"  # Peso 1, Chance 50
         assert bosses[3].name == "no_chance_boss"  # Peso 2
-        assert bosses[4].name == "a_collecting"  # Peso 3, Alfabético A
-        assert bosses[5].name == "b_collecting"  # Peso 3, Alfabético B
-        assert bosses[6].name == "missing_boss"  # Peso 4
+        assert bosses[4].name == "missing_boss"  # Peso 3
+        assert bosses[5].name == "a_collecting"  # Peso 4, Alfabético A
+        assert bosses[6].name == "b_collecting"  # Peso 4, Alfabético B

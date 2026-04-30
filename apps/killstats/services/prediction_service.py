@@ -26,8 +26,8 @@ class PredictionStatus(models.TextChoices):
             self.OVERDUE: 0,
             self.EXPECTED: 1,
             self.NO_CHANCE: 2,
-            self.COLLECTING: 3,
-            self.MISSING: 4,
+            self.MISSING: 3,
+            self.COLLECTING: 4,
         }
         return weights.get(self, 99)
 
@@ -96,8 +96,10 @@ class PredictionService:
             return PredictionStatus.NO_CHANCE
         if min_d <= days <= max_d:
             return PredictionStatus.EXPECTED
+        # Se passou do máximo, verificamos a tolerância de 20%
         if days <= (max_d * 1.2):
             return PredictionStatus.OVERDUE
+        # Se passou de 20% além do máximo, é considerado MISSING
         return PredictionStatus.MISSING
 
     @staticmethod
