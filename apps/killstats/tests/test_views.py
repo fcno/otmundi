@@ -240,3 +240,47 @@ class TestBossMonitorView:
 
         # Para o anônimo, a ordem deve ser a padrão de status (Overdue primeiro)[cite: 8]
         assert bosses[0].name == "overdue_boss"
+
+    def test_toggle_preference_exclusivity_and_security(self, client: Client) -> None:
+        """
+        Caso de borda:
+        1. Garante que precisa de login.
+        2. Valida que ao Pinar, a Baixa Prioridade é removida (Exclusão Mútua).
+        """
+        user = User.objects.create_user(username="toggle_user", password="pw")
+        monster = Monster.objects.create(name="ghazbaran", is_active=True)
+        url = reverse("preferences:toggle_preference")
+
+        # 1. Teste de Segurança (Sem login)
+        resp = client.post(url, {"monster_id": monster.id, "action": "pin"})
+        assert resp.status_code == 302  # Redireciona para login
+
+        # 2. Teste de Exclusão Mútua
+        client.force_login(user)
+        # Começa como Baixa Prioridade
+        pref = UserMonsterPreference.objects.create(
+            user=user, monster=monster, is_low_priority=True
+        )
+
+        # Ativa o Pin
+        client.post(url, {"monster_id": monster.id, "action": "pin"})
+        pref.refresh_from_db()
+
+        assert pref.is_pinned is True
+        assert pref.is_low_priority is False  # Deve ter sido limpo automaticamente
+
+    def test_toggle_action_unpin(self, client: Client) -> None:
+        """Valida que o toggle também funciona para desmarcar (not condition)."""
+        user = User.objects.create_user(username="unpin_user", password="pw")
+        monster = Monster.objects.create(name="ferumbras", is_active=True)
+        client.force_login(user)
+
+        pref = UserMonsterPreference.objects.create(
+            user=user, monster=monster, is_pinned=True
+        )
+        url = reverse("preferences:toggle_preference")
+
+        # Desmarca o Pin
+        client.post(url, {"monster_id": monster.id, "action": "pin"})
+        pref.refresh_from_db()
+        assert pref.is_pinned is False

@@ -15,9 +15,9 @@ class TestUserMonsterPreference:
         self.user = User.objects.create_user(username="player_test", password="pw")
         self.monster = Monster.objects.create(name="Ferumbras", is_active=True)
 
-    def test_preference_creation_and_fields(self) -> None:
+    def test_preference_custom_values(self) -> None:
         """Testa a criação com campos específicos e o timestamp de atualização."""
-        # Comentário: Campos atualizados para is_low_priority e is_pinned[cite: 7, 10]
+        # Comentário: Campos atualizados para is_low_priority e is_pinned
         pref = UserMonsterPreference.objects.create(
             user=self.user, monster=self.monster, is_low_priority=True, is_pinned=True
         )
@@ -25,8 +25,17 @@ class TestUserMonsterPreference:
         assert pref.is_pinned is True
         assert pref.updated_at is not None
 
+    def test_preference_creation_and_default_fields(self) -> None:
+        """Testa criação e garante que os campos iniciam desativados por padrão."""
+        pref = UserMonsterPreference.objects.create(
+            user=self.user, monster=self.monster
+        )
+        assert pref.is_pinned is False
+        assert pref.is_low_priority is False
+        assert pref.updated_at is not None
+
     def test_unique_constraint_user_monster(self) -> None:
-        """Caso de borda: Impede que o mesmo usuário tenha duas preferências para o mesmo monstro."""
+        """Caso de borda: Impede duplicidade de preferência para o mesmo par usuário/monstro."""
         UserMonsterPreference.objects.create(user=self.user, monster=self.monster)
         with pytest.raises(IntegrityError):
             UserMonsterPreference.objects.create(user=self.user, monster=self.monster)
@@ -39,13 +48,13 @@ class TestUserMonsterPreference:
         assert UserMonsterPreference.objects.filter(user=self.user).count() == 2
 
     def test_str_representation(self) -> None:
-        """Testa o retorno do método __str__."""
+        """Testa o retorno amigável do método __str__."""
         pref = UserMonsterPreference(user=self.user, monster=self.monster)
-        assert "player_test" in str(pref)
-        assert "ferumbras" in str(pref)  # Lowercase devido ao save() do Monster
+        assert self.user.username in str(pref)
+        assert self.monster.name.lower() in str(pref).lower()
 
     def test_cascade_on_user_delete(self) -> None:
-        """Caso de borda: Preferências devem ser removidas se o usuário for deletado."""
+        """Caso de borda: Garante a limpeza das preferências ao deletar o usuário."""
         UserMonsterPreference.objects.create(user=self.user, monster=self.monster)
         self.user.delete()
         assert UserMonsterPreference.objects.count() == 0
