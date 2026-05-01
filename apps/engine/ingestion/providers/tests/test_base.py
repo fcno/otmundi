@@ -1,0 +1,16 @@
+# apps/ingestion/providers/tests/test_base.py
+
+from apps.engine.ingestion.providers.base import BaseProvider
+
+
+class DummyProvider(BaseProvider[dict[str, object], int]):
+    def normalize_raw(self, data: dict[str, object]) -> int:
+        return 1
+
+
+def test_base_provider_can_be_implemented() -> None:
+    provider = DummyProvider()
+
+    result = provider.normalize_raw({})
+
+    assert result == 1

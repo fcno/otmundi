@@ -2,7 +2,7 @@ import pytest
 
 from apps.core.validators.base import ValidationError
 from apps.core.validators.unique import validate_unique
-from apps.worlds.models.world import World
+from apps.game_data.worlds.models.world import World
 
 
 @pytest.mark.django_db
