@@ -1,0 +1,14 @@
+{% load i18n %}
+{# Interface de autenticação de usuários #}
+<h2>{% translate "Login" %}</h2>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">{% translate "Log In" %}</button>
+</form>
+
+<p>
+    {% translate "Don't have an account?" %} 
+    <a href="{% url 'users:register' %}">{% translate "Register here" %}</a>
+</p>

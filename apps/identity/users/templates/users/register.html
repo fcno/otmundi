@@ -1,0 +1,7 @@
+{% load i18n %}
+{# Formulário de registro de novos usuários #}
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">{% translate "Register" %}</button>
+</form>

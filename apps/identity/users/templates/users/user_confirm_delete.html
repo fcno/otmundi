@@ -1,0 +1,10 @@
+{% load i18n %}
+{# Confirmação de exclusão lógica da conta #}
+<h2>{% translate "Confirm Deletion" %}</h2>
+<p>{% translate "Are you sure you want to deactivate your account? This action cannot be undone." %}</p>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">{% translate "Confirm Deactivation" %}</button>
+    <a href="{% url 'killstats:boss_monitor' %}">{% translate "Cancel" %}</a>
+</form>
