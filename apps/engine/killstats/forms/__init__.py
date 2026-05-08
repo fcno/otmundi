@@ -1,3 +1,3 @@
-from .monster_metadata_form import MonsterMetadataForm
+from .monster_config_form import MonsterConfigForm
 
-__all__ = ["MonsterMetadataForm"]
+__all__ = ["MonsterConfigForm"]

@@ -4,7 +4,7 @@ from django.contrib.auth.models import Permission
 from django.test import Client
 from django.urls import reverse
 
-from apps.engine.killstats.models.monster_metadata import MonsterMetadata
+from apps.engine.killstats.models.monster_config import MonsterConfig
 from apps.game_data.monsters.models.monster import Monster
 
 User = get_user_model()
@@ -20,14 +20,14 @@ class TestBossCuratorView:
         self.url = reverse("killstats:boss_curator")
 
     def test_curator_access_denied_without_permission(self) -> None:
-        """403 para usuários sem a permissão killstats.change_monstermetadata."""
+        """403 para usuários sem a permissão killstats.change_monsterconfig."""
         self.client.force_login(self.user)
         response = self.client.get(self.url)
         assert response.status_code == 403
 
     def test_curator_post_success_and_audit_fields(self) -> None:
         """Valida se o POST salva corretamente e registra QUEM e QUANDO."""
-        perm = Permission.objects.get(codename="change_monstermetadata")
+        perm = Permission.objects.get(codename="change_monsterconfig")
         self.user.user_permissions.add(perm)
         self.client.force_login(self.user)
 
@@ -35,15 +35,15 @@ class TestBossCuratorView:
         response = self.client.post(self.url, payload)
 
         assert response.status_code == 302
-        metadata = MonsterMetadata.objects.get(monster=self.monster)
-        assert metadata.min_interval == 2
-        assert metadata.max_interval == 4
-        assert metadata.validated_by == self.user
-        assert metadata.validated_at is not None
+        config = MonsterConfig.objects.get(monster=self.monster)
+        assert config.min_interval == 2
+        assert config.max_interval == 4
+        assert config.validated_by == self.user
+        assert config.validated_at is not None
 
     def test_curator_post_error_message_display(self) -> None:
         """Valida que a mensagem de erro do formulário é repassada para o context do Django."""
-        perm = Permission.objects.get(codename="change_monstermetadata")
+        perm = Permission.objects.get(codename="change_monsterconfig")
         self.user.user_permissions.add(perm)
         self.client.force_login(self.user)
 

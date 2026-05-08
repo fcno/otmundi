@@ -19,12 +19,12 @@ def test_sanitize_recursive_dict() -> None:
     payload = {
         "name": "  Dragon Lord  ",
         "empty_info": "   ",
-        "metadata": {"title": "  BOSS  ", "description": ""},
+        "config": {"title": "  BOSS  ", "description": ""},
     }
     expected = {
         "name": "Dragon Lord",
         "empty_info": None,
-        "metadata": {"title": "BOSS", "description": None},
+        "config": {"title": "BOSS", "description": None},
     }
     assert sanitize_data(payload) == expected
 

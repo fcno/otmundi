@@ -3,7 +3,7 @@ from datetime import timedelta
 import pytest
 from django.utils import timezone
 
-from apps.engine.killstats.models.monster_metadata import MonsterMetadata
+from apps.engine.killstats.models.monster_config import MonsterConfig
 from apps.engine.killstats.models.monster_spawn_event import MonsterSpawnEvent
 from apps.game_data.monsters.models.monster import Monster
 from apps.game_data.worlds.models.world import World
@@ -17,7 +17,7 @@ class TestKillstatsSignals:
         self.world = World.objects.create(name="ferobra")
         self.now = timezone.now()
 
-    def test_automatic_metadata_update_on_event_creation(self) -> None:
+    def test_automatic_config_update_on_event_creation(self) -> None:
         """
         Garante que a criação de um evento dispara o aprendizado via Signal
         sem intervenção manual.
@@ -33,10 +33,10 @@ class TestKillstatsSignals:
             monster=self.monster, world=self.world, timestamp=self.now
         )
 
-        # Verificamos se o Metadata foi criado e atualizado "sozinho"
-        metadata = MonsterMetadata.objects.get(monster=self.monster)
-        assert metadata.min_interval == 20
-        assert metadata.max_interval == 20
+        # Verificamos se o Config foi criado e atualizado "sozinho"
+        config = MonsterConfig.objects.get(monster=self.monster)
+        assert config.min_interval == 20
+        assert config.max_interval == 20
 
     def test_signal_does_not_recalibrate_on_update(self) -> None:
         """
@@ -53,18 +53,18 @@ class TestKillstatsSignals:
             monster=self.monster, world=self.world, timestamp=self.now
         )
 
-        # Forçamos um valor inicial no metadata
-        metadata = MonsterMetadata.objects.get(monster=self.monster)
-        metadata.min_interval = 10
-        metadata.save()
+        # Forçamos um valor inicial no config
+        config = MonsterConfig.objects.get(monster=self.monster)
+        config.min_interval = 10
+        config.save()
 
         # Editamos o evento (ex: mudando quem reportou ou flag is_puff)
         event.is_puff = True
         event.save()  # Isso dispara o post_save com created=False
 
-        # Verificamos que o metadata permanece o mesmo (não houve recalibração desnecessária)
-        metadata.refresh_from_db()
-        assert metadata.min_interval == 10
+        # Verificamos que o config permanece o mesmo (não houve recalibração desnecessária)
+        config.refresh_from_db()
+        assert config.min_interval == 10
 
     def test_signal_with_multiple_monsters_isolation(self) -> None:
         """
@@ -78,7 +78,7 @@ class TestKillstatsSignals:
         )
 
         # O metadado do Morgaroth não deve existir/ser afetado
-        assert not MonsterMetadata.objects.filter(monster=other_monster).exists()
+        assert not MonsterConfig.objects.filter(monster=other_monster).exists()
 
     def test_signal_learning_with_puff_events(self) -> None:
         """
@@ -99,5 +99,5 @@ class TestKillstatsSignals:
             monster=self.monster, world=self.world, timestamp=self.now, is_puff=False
         )
 
-        metadata = MonsterMetadata.objects.get(monster=self.monster)
-        assert metadata.min_interval == 11
+        config = MonsterConfig.objects.get(monster=self.monster)
+        assert config.min_interval == 11

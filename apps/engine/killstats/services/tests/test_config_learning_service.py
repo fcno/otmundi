@@ -3,17 +3,17 @@ from datetime import timedelta
 import pytest
 from django.utils import timezone
 
-from apps.engine.killstats.models.monster_metadata import MonsterMetadata
+from apps.engine.killstats.models.monster_config import MonsterConfig
 from apps.engine.killstats.models.monster_spawn_event import MonsterSpawnEvent
-from apps.engine.killstats.services.metadata_learning_service import (
-    MetadataLearningService,
+from apps.engine.killstats.services.config_learning_service import (
+    ConfigLearningService,
 )
 from apps.game_data.monsters.models.monster import Monster
 from apps.game_data.worlds.models.world import World
 
 
 @pytest.mark.django_db
-class TestMetadataLearningService:
+class TestConfigLearningService:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
         self.monster = Monster.objects.create(name="ferumbras", is_active=True)
@@ -38,26 +38,26 @@ class TestMetadataLearningService:
         self._create_event(self.world_b, 0)
         self._create_event(self.world_b, 12)
 
-        MetadataLearningService.recalibrate_monster(self.monster)
+        ConfigLearningService.recalibrate_monster(self.monster)
 
-        metadata = MonsterMetadata.objects.get(monster=self.monster)
-        assert metadata.min_interval == 12
-        assert metadata.max_interval == 15
+        config = MonsterConfig.objects.get(monster=self.monster)
+        assert config.min_interval == 12
+        assert config.max_interval == 15
 
-    def test_metadata_dynamic_creation(self) -> None:
-        """Verifica se o serviço cria o MonsterMetadata se ele não existir."""
-        assert MonsterMetadata.objects.filter(monster=self.monster).count() == 0
+    def test_config_dynamic_creation(self) -> None:
+        """Verifica se o serviço cria o MonsterConfig se ele não existir."""
+        assert MonsterConfig.objects.filter(monster=self.monster).count() == 0
 
         self._create_event(self.world_a, 0)
         self._create_event(self.world_a, 10)
 
-        MetadataLearningService.recalibrate_monster(self.monster)
-        assert MonsterMetadata.objects.filter(monster=self.monster).exists()
+        ConfigLearningService.recalibrate_monster(self.monster)
+        assert MonsterConfig.objects.filter(monster=self.monster).exists()
 
     def test_no_regression_on_wider_knowledge(self) -> None:
         """Garante que o conhecimento não 'encolha' se dados novos forem menos extremos."""
         # Já sabemos que a janela é 5-20
-        MonsterMetadata.objects.create(
+        MonsterConfig.objects.create(
             monster=self.monster, min_interval=5, max_interval=20
         )
 
@@ -65,11 +65,11 @@ class TestMetadataLearningService:
         self._create_event(self.world_a, 0)
         self._create_event(self.world_a, 10)
 
-        MetadataLearningService.recalibrate_monster(self.monster)
+        ConfigLearningService.recalibrate_monster(self.monster)
 
-        metadata = MonsterMetadata.objects.get(monster=self.monster)
-        assert metadata.min_interval == 5
-        assert metadata.max_interval == 20
+        config = MonsterConfig.objects.get(monster=self.monster)
+        assert config.min_interval == 5
+        assert config.max_interval == 20
 
     def test_full_recalibration_batch(self) -> None:
         """Testa o processamento em lote para todos os monstros."""
@@ -85,10 +85,10 @@ class TestMetadataLearningService:
             monster=monster2, world=self.world_a, timestamp=self.now - timedelta(days=7)
         )
 
-        MetadataLearningService.full_recalibration()
+        ConfigLearningService.full_recalibration()
 
-        assert MonsterMetadata.objects.get(monster=self.monster).min_interval == 10
-        assert MonsterMetadata.objects.get(monster=monster2).min_interval == 7
+        assert MonsterConfig.objects.get(monster=self.monster).min_interval == 10
+        assert MonsterConfig.objects.get(monster=monster2).min_interval == 7
 
     def test_cold_start_behavior(self) -> None:
         """
@@ -98,16 +98,16 @@ class TestMetadataLearningService:
         """
         # 1. Primeira Kill
         self._create_event(self.world_a, 20)
-        MetadataLearningService.recalibrate_monster(self.monster)
-        assert not MonsterMetadata.objects.filter(monster=self.monster).exists()
+        ConfigLearningService.recalibrate_monster(self.monster)
+        assert not MonsterConfig.objects.filter(monster=self.monster).exists()
 
         # 2. Segunda Kill (Hoje)
         self._create_event(self.world_a, 0)
-        MetadataLearningService.recalibrate_monster(self.monster)
+        ConfigLearningService.recalibrate_monster(self.monster)
 
-        assert MonsterMetadata.objects.filter(monster=self.monster).exists()
+        assert MonsterConfig.objects.filter(monster=self.monster).exists()
 
-        metadata = MonsterMetadata.objects.get(monster=self.monster)
+        config = MonsterConfig.objects.get(monster=self.monster)
         # O único intervalo observado é de 20 dias
-        assert metadata.min_interval == 20
-        assert metadata.max_interval == 20
+        assert config.min_interval == 20
+        assert config.max_interval == 20

@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from apps.game_data.monsters.models.monster import Monster
 
 
-class MonsterMetadata(models.Model):
+class MonsterConfig(models.Model):
     """
     Armazena os parâmetros de predição e configurações validadas para um monstro.
     Une o aprendizado automático (suggested) com a curadoria manual (confirmed).
@@ -15,7 +15,7 @@ class MonsterMetadata(models.Model):
     monster = models.OneToOneField(
         Monster,
         on_delete=models.CASCADE,
-        related_name="metadata",
+        related_name="config",
         verbose_name=_("monster"),
     )
 
@@ -42,13 +42,13 @@ class MonsterMetadata(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="validated_metadata",
+        related_name="validated_config",
         verbose_name=_("validated by"),
     )
 
     class Meta:
-        verbose_name = _("monster metadata")
-        verbose_name_plural = _("monster metadatas")
+        verbose_name = _("monster config")
+        verbose_name_plural = _("monster configs")
 
     def __str__(self) -> str:
         min_val = self.min_interval if self.min_interval is not None else "?"

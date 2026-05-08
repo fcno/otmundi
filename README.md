@@ -11,12 +11,12 @@ O Otmundi visa fornecer uma infraestrutura robusta para a gestão de estatístic
 O projeto segue uma arquitetura baseada em camadas para garantir a separação de responsabilidades e facilitar a manutenção:
 
 * **Camada de Ingestão (Providers)**: Responsável pela comunicação externa e normalização primária dos dados brutos. Utiliza `TypedDict` para garantir contratos de dados rígidos desde a entrada.
-* **Camada de Serviços (Services)**: Contém a lógica de negócio central. Realiza a sanitização de dados, orquestra a validação e gerencia o `MetadataLearningService` para recalibração de intervalos.
+* **Camada de Serviços (Services)**: Contém a lógica de negócio central. Realiza a sanitização de dados, orquestra a validação e gerencia o `ConfigLearningService` para recalibração de intervalos.
 * **Camada de Eventos (Signals)**: Automação que utiliza Django Signals para disparar o aprendizado de metadados sempre que uma nova morte ou "puff" é registrado.
 * **Camada de Persistência (Repositories)**: Abstrai a lógica do banco de dados (Django ORM), permitindo que o serviço foque na regra de negócio enquanto o repositório lida com a criação de registros e relacionamentos complexos.
 * **Helpers e Validadores**: Utilitários globais para sanitização recursiva e um pipeline de validação/normalização que assegura que apenas dados válidos cheguem ao banco.
 
-## 🧠 Motor de Aprendizado (Metadata Learning)
+## 🧠 Motor de Aprendizado (Config Learning)
 
 O sistema analisa automaticamente o histórico de `MonsterSpawnEvent` para gerar inteligência:
 

@@ -3,19 +3,19 @@ from typing import TYPE_CHECKING, Any
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
-from apps.engine.killstats.models.monster_metadata import MonsterMetadata
+from apps.engine.killstats.models.monster_config import MonsterConfig
 
 # Se estivermos apenas checando tipos, o Mypy vê o Generic.
 # Em execução, o Python ignora.
 if TYPE_CHECKING:
-    BaseForm = forms.ModelForm[MonsterMetadata]
+    BaseForm = forms.ModelForm[MonsterConfig]
 else:
     BaseForm = forms.ModelForm
 
 
-class MonsterMetadataForm(BaseForm):
+class MonsterConfigForm(BaseForm):
     class Meta:
-        model = MonsterMetadata
+        model = MonsterConfig
         fields = ["min_interval", "max_interval"]
 
     def clean(self) -> dict[str, Any]:

@@ -1,12 +1,12 @@
 from django.db.models import F, Window
 from django.db.models.functions import Lag
 
-from apps.engine.killstats.models.monster_metadata import MonsterMetadata
+from apps.engine.killstats.models.monster_config import MonsterConfig
 from apps.engine.killstats.models.monster_spawn_event import MonsterSpawnEvent
 from apps.game_data.monsters.models.monster import Monster
 
 
-class MetadataLearningService:
+class ConfigLearningService:
     @classmethod
     def recalibrate_monster(cls, monster: Monster) -> None:
         """Analisa o histórico completo e recalibra a janela global."""
@@ -30,27 +30,27 @@ class MetadataLearningService:
                     intervals.append(delta_days)
 
         if intervals:
-            cls._apply_metadata(monster, min(intervals), max(intervals))
+            cls._apply_config(monster, min(intervals), max(intervals))
 
     @staticmethod
-    def _apply_metadata(monster: Monster, observed_min: int, observed_max: int) -> None:
-        """Aplica os novos limites ao Metadata global."""
-        metadata, _ = MonsterMetadata.objects.get_or_create(monster=monster)
+    def _apply_config(monster: Monster, observed_min: int, observed_max: int) -> None:
+        """Aplica os novos limites ao Config global."""
+        config, _ = MonsterConfig.objects.get_or_create(monster=monster)
 
         updated = False
 
         # Se o observado for menor que o registrado (ou se estiver nulo)
-        if metadata.min_interval is None or observed_min < metadata.min_interval:
-            metadata.min_interval = observed_min
+        if config.min_interval is None or observed_min < config.min_interval:
+            config.min_interval = observed_min
             updated = True
 
         # Se o observado for maior que o registrado (ou se estiver nulo)
-        if metadata.max_interval is None or observed_max > metadata.max_interval:
-            metadata.max_interval = observed_max
+        if config.max_interval is None or observed_max > config.max_interval:
+            config.max_interval = observed_max
             updated = True
 
         if updated:
-            metadata.save()
+            config.save()
 
     @classmethod
     def full_recalibration(cls) -> None:

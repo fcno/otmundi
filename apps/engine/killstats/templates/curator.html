@@ -42,20 +42,20 @@
                 <tr class="hover">
                     <td>
                         <div class="font-bold text-lg">{{ boss.name|title }}</div>
-                        {% if boss.metadata.validated_at %}
+                        {% if boss.config.validated_at %}
                             <div class="text-xs text-base-content/50 italic">
-                                {% translate "Last validation" %}: {{ boss.metadata.validated_at|date:"Y-m-d" }}
-                                {% if boss.metadata.validated_by %}
-                                    by {{ boss.metadata.validated_by.username }}
+                                {% translate "Last validation" %}: {{ boss.config.validated_at|date:"Y-m-d" }}
+                                {% if boss.config.validated_by %}
+                                    by {{ boss.config.validated_by.username }}
                                 {% endif %}
                             </div>
                         {% endif %}
                     </td>
                     <td>
                         <div class="flex flex-col gap-1">
-                            {% if boss.metadata.min_interval and boss.metadata.max_interval %}
+                            {% if boss.config.min_interval and boss.config.max_interval %}
                                 <span class="badge badge-outline gap-2">
-                                    {{ boss.metadata.min_interval }} - {{ boss.metadata.max_interval }} {% translate "days" %}
+                                    {{ boss.config.min_interval }} - {{ boss.config.max_interval }} {% translate "days" %}
                                 </span>
                             {% else %}
                                 <span class="badge badge-ghost opacity-40 italic">{% translate "Not configured" %}</span>
@@ -84,11 +84,11 @@
                             <div class="join">
                                 <input type="number" name="min_interval" min="1" 
                                     class="input input-bordered input-sm w-20 join-item" required
-                                    value="{{ boss.suggestion.suggested_min|default:boss.metadata.min_interval|default:'' }}">
+                                    value="{{ boss.suggestion.suggested_min|default:boss.config.min_interval|default:'' }}">
 
                                 <input type="number" name="max_interval" min="1" 
                                     class="input input-bordered input-sm w-20 join-item" required
-                                    value="{{ boss.suggestion.suggested_max|default:boss.metadata.max_interval|default:'' }}">
+                                    value="{{ boss.suggestion.suggested_max|default:boss.config.max_interval|default:'' }}">
                             </div>
 
                             <button type="submit" class="btn btn-primary btn-sm gap-2">

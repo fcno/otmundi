@@ -9,8 +9,8 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views.generic import ListView
 
-from apps.engine.killstats.forms.monster_metadata_form import MonsterMetadataForm
-from apps.engine.killstats.models.monster_metadata import MonsterMetadata
+from apps.engine.killstats.forms.monster_config_form import MonsterConfigForm
+from apps.engine.killstats.models.monster_config import MonsterConfig
 from apps.engine.killstats.services.monster_event_service import MonsterEventService
 from apps.game_data.monsters.models.monster import Monster
 
@@ -28,13 +28,13 @@ class BossCuratorView(PermissionRequiredMixin, CuratorBaseView):
     model = Monster
     template_name = "curator.html"
     context_object_name = "bosses"
-    permission_required = "killstats.change_monstermetadata"
+    permission_required = "killstats.change_monsterconfig"
 
     def get_queryset(self) -> QuerySet[Monster]:
         """
         Retorna apenas bosses ativos, consistente com o Monitor.
         """
-        return Monster.objects.filter(is_active=True).prefetch_related("metadata")
+        return Monster.objects.filter(is_active=True).prefetch_related("config")
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
@@ -50,16 +50,16 @@ class BossCuratorView(PermissionRequiredMixin, CuratorBaseView):
         Processa a submissão manual dos intervalos de spawn.
         """
         monster_id = request.POST.get("monster_id")
-        instance = MonsterMetadata.objects.filter(monster_id=monster_id).first()
+        instance = MonsterConfig.objects.filter(monster_id=monster_id).first()
 
-        form = MonsterMetadataForm(request.POST, instance=instance)
+        form = MonsterConfigForm(request.POST, instance=instance)
 
         if form.is_valid():
-            metadata = form.save(commit=False)
-            metadata.monster_id = monster_id
-            metadata.validated_at = timezone.now()
-            metadata.validated_by = request.user
-            metadata.save()
+            config = form.save(commit=False)
+            config.monster_id = monster_id
+            config.validated_at = timezone.now()
+            config.validated_by = request.user
+            config.save()
             messages.success(request, _("Updated successfully."))
         else:
             # Pega apenas a primeira mensagem de erro para o alert do DaisyUI

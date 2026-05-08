@@ -3,7 +3,7 @@ from datetime import timedelta
 import pytest
 from django.utils import timezone
 
-from apps.engine.killstats.models.monster_metadata import MonsterMetadata
+from apps.engine.killstats.models.monster_config import MonsterConfig
 from apps.engine.killstats.models.monster_spawn_event import MonsterSpawnEvent
 from apps.engine.killstats.services.prediction_service import (
     PredictionService,
@@ -20,7 +20,7 @@ class TestPredictionService:
         self.world = World.objects.create(name="Antica")
         self.monster = Monster.objects.create(name="Orshabaal", is_active=True)
         # Janela de 10 a 20 dias (Total de 11 dias possíveis)
-        self.metadata = MonsterMetadata.objects.create(
+        self.config = MonsterConfig.objects.create(
             monster=self.monster, min_interval=10, max_interval=20
         )
 
@@ -81,10 +81,10 @@ class TestPredictionService:
         assert result["status_code"] == PredictionStatus.MISSING.value
         assert result["chance_percentage"] == 0
 
-    def test_metadata_null_intervals(self) -> None:
+    def test_config_null_intervals(self) -> None:
         """Garante que se os campos forem nulos, status é Collecting."""
-        self.metadata.min_interval = None
-        self.metadata.save()
+        self.config.min_interval = None
+        self.config.save()
         self._create_event(days_ago=10)
         result = PredictionService.get_prediction(self.monster, self.world)
         assert result["status_code"] == PredictionStatus.COLLECTING.value
@@ -96,9 +96,9 @@ class TestPredictionService:
         # Verifica se o texto traduzido (label) não é igual à chave do enum
         assert result["status"] == str(PredictionStatus.NO_CHANCE.label)
 
-    def test_status_collecting_no_metadata_record(self) -> None:
+    def test_status_collecting_no_config_record(self) -> None:
         """Garante status COLLECTING se o registro de metadados nem existir."""
-        # Criamos um monstro novo sem criar o MonsterMetadata para ele
+        # Criamos um monstro novo sem criar o MonsterConfig para ele
         new_monster = Monster.objects.create(name="Morgaroth", is_active=True)
         result = PredictionService.get_prediction(new_monster, self.world)
 

@@ -51,10 +51,10 @@ class PredictionService:
         Calcula a predição de spawn baseada no histórico local e janelas globais.
         """
         last_event = cls._get_last_event(monster, world)
-        metadata = getattr(monster, "metadata", None)
+        config = getattr(monster, "config", None)
 
-        min_days = metadata.min_interval if metadata else None
-        max_days = metadata.max_interval if metadata else None
+        min_days = config.min_interval if config else None
+        max_days = config.max_interval if config else None
 
         # Cenário Cold Start: Sem histórico ou sem configuração manual
         if not last_event or min_days is None or max_days is None:
