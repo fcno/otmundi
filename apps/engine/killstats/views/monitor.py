@@ -27,7 +27,7 @@ class BossMonitorView(BaseView):
 
     def get_queryset(self) -> QuerySet[Monster]:
         """
-        Retorna apenas os monstros marcados explicitamente para exibição.
+        Retorna apenas os monstros marcados explicitamente para exibição, consistente com o curator.
         """
         return Monster.objects.filter(is_active=True)
 

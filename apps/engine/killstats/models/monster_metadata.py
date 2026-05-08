@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -6,9 +8,8 @@ from apps.game_data.monsters.models.monster import Monster
 
 class MonsterMetadata(models.Model):
     """
-    Armazena os parâmetros de predição para um monstro específico.
-    Campos nulos indicam que ainda não há conhecimento prévio sobre o boss.
-    Serão ajustados na fase adaptativa.
+    Armazena os parâmetros de predição e configurações validadas para um monstro.
+    Une o aprendizado automático (suggested) com a curadoria manual (confirmed).
     """
 
     monster = models.OneToOneField(
@@ -17,17 +18,32 @@ class MonsterMetadata(models.Model):
         related_name="metadata",
         verbose_name=_("monster"),
     )
+
+    # Restrição: Mínimo 1 dia via validador nativo
     min_interval = models.PositiveIntegerField(
-        _("minimum interval"),
-        help_text=_("Minimum days for a new spawn."),
+        _("confirmed minimum interval"),
         null=True,
         blank=True,
+        validators=[MinValueValidator(1)],
+        help_text=_("The lower bound of the spawn window validated by a human."),
     )
     max_interval = models.PositiveIntegerField(
-        _("maximum interval"),
-        help_text=_("Maximum days for a new spawn."),
+        _("confirmed maximum interval"),
         null=True,
         blank=True,
+        validators=[MinValueValidator(1)],
+        help_text=_("The upper bound of the spawn window validated by an admin."),
+    )
+
+    # Campos de Auditoria
+    validated_at = models.DateTimeField(_("validated at"), null=True, blank=True)
+    validated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="validated_metadata",
+        verbose_name=_("validated by"),
     )
 
     class Meta:
@@ -35,9 +51,8 @@ class MonsterMetadata(models.Model):
         verbose_name_plural = _("monster metadatas")
 
     def __str__(self) -> str:
-        return _("Config: {monster} ({min}-{max} {days})").format(
-            monster=self.monster.name,
-            min=self.min_interval if self.min_interval is not None else "?",
-            max=self.max_interval if self.max_interval is not None else "?",
-            days=_("days"),
+        min_val = self.min_interval if self.min_interval is not None else "?"
+        max_val = self.max_interval if self.max_interval is not None else "?"
+        return _("Config: {monster} ({min}-{max} days)").format(
+            monster=self.monster.name, min=min_val, max=max_val
         )

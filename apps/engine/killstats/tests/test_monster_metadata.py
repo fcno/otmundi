@@ -47,3 +47,14 @@ class TestMonsterMetadata:
         MonsterMetadata.objects.create(monster=self.monster)
         self.monster.delete()
         assert MonsterMetadata.objects.count() == 0
+
+    def test_model_validation_zero_value(self) -> None:
+        """Garante que a model valida o valor mínimo de 1 no full_clean."""
+        from django.core.exceptions import ValidationError
+
+        metadata = MonsterMetadata(monster=self.monster, min_interval=0)
+
+        # O Django não valida no .save() por padrão, precisamos chamar o full_clean
+        with pytest.raises(ValidationError) as excinfo:
+            metadata.full_clean()
+        assert "min_interval" in excinfo.value.message_dict

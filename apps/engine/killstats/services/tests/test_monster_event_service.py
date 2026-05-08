@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 import pytest
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -100,3 +102,46 @@ class TestMonsterSpawnEvent:
         self.user.delete()
         event.refresh_from_db()
         assert event.reported_by is None
+
+    def test_calculate_intervals_basic_logic(self) -> None:
+        """Testa se calcula corretamente a diferença de dias entre eventos."""
+        base_time = datetime(2026, 5, 1)
+        # Simula 3 eventos no Mundo 1
+        data = {
+            1: [
+                base_time,
+                base_time + timedelta(days=5),
+                base_time + timedelta(days=12),
+            ]
+        }
+        intervals = MonsterEventService._calculate_intervals(data)
+        # Diferenças: (5-0) = 5, (12-5) = 7
+        assert intervals == [5, 7]
+
+    def test_calculate_intervals_multiple_worlds_isolation(self) -> None:
+        """Garante que intervalos não são calculados entre mundos diferentes."""
+        base_time = datetime(2026, 5, 1)
+        data = {
+            1: [base_time, base_time + timedelta(days=10)],
+            2: [base_time + timedelta(days=2), base_time + timedelta(days=5)],
+        }
+        intervals = MonsterEventService._calculate_intervals(data)
+        # Mundo 1: 10 dias | Mundo 2: 3 dias
+        assert 10 in intervals
+        assert 3 in intervals
+        assert len(intervals) == 2
+
+    def test_calculate_intervals_ignores_single_events(self) -> None:
+        """Mundos com apenas um evento não devem gerar intervalos."""
+        data = {1: [datetime.now()]}
+        intervals = MonsterEventService._calculate_intervals(data)
+        assert intervals == []
+
+    def test_calculate_intervals_sorting_robustness(self) -> None:
+        """Garante que mesmo que os eventos venham bagunçados, o cálculo é correto."""
+        t1 = datetime(2026, 5, 1)
+        t2 = datetime(2026, 5, 10)
+        # Eventos fora de ordem na lista
+        data = {1: [t2, t1]}
+        intervals = MonsterEventService._calculate_intervals(data)
+        assert intervals == [9]

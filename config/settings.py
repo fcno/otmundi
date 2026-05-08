@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 
 import environ
+from django.contrib.messages import constants as messages
 
 # Inicializa o environ
 env = environ.Env(DEBUG=(bool, False))
@@ -124,4 +125,16 @@ INTERNAL_IPS = [
     "127.0.0.1",
 ]
 
+MESSAGE_TAGS = {
+    messages.DEBUG: "alert-info",
+    messages.INFO: "alert-info",
+    messages.SUCCESS: "alert-success",
+    messages.WARNING: "alert-warning",
+    messages.ERROR: "alert-error",  # Isso garante o vermelho (danger)
+}
+
 RATELIMIT_ENABLE = True  # Ativa o throttling nos testes e dev
+
+# Aponta para o namespace e nome da URL definida no apps.identity.users.urls
+LOGIN_URL = "users:login"
+LOGIN_REDIRECT_URL = "home"
