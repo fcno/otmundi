@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from apps.engine.snapshots.models.snapshot import Snapshot
 from apps.game_data.monsters.models.monster import Monster
@@ -19,6 +20,9 @@ class KillStat(models.Model):
     last_7_days_monsters_killed = models.IntegerField()
 
     class Meta:
+        app_label = "killstats"
+        verbose_name = _("killstat")
+        verbose_name_plural = _("killstats")
         constraints = [
             models.UniqueConstraint(
                 fields=["snapshot", "monster"],

@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from apps.game_data.worlds.models.world import World
 
@@ -11,6 +12,10 @@ class Snapshot(models.Model):
     source_file = models.CharField(max_length=255)
 
     class Meta:
+        app_label = "snapshots"
+        verbose_name = _("snapshot")
+        verbose_name_plural = _("snapshots")
+
         constraints = [
             models.UniqueConstraint(
                 fields=["world", "captured_at"],

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import toggle_monster_preference
+from .views.preference_actions import toggle_monster_preference
 
 app_name = "preferences"
 

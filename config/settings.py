@@ -24,26 +24,37 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 
 # Application definition
 
-INSTALLED_APPS = [
+DJANGO_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+]
+
+THIRD_PARTY_APPS = [
+    "rest_framework",
+    "tailwind",
+    "django_browser_reload",
+]
+
+LOCAL_APPS = [
     "apps.core",
+    # Identity
+    "apps.identity.users",
+    "apps.identity.preferences",
+    # Game Data
+    "apps.game_data.monsters",
+    "apps.game_data.worlds",
+    # Engine
     "apps.engine.ingestion",
     "apps.engine.killstats",
     "apps.engine.snapshots",
-    "apps.game_data.monsters",
-    "apps.game_data.worlds",
-    "apps.identity.users",
-    "apps.identity.preferences",
-    "rest_framework",
-    "tailwind",
     "theme",
-    "django_browser_reload",
 ]
+
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

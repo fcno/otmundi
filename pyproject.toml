@@ -45,7 +45,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["worlds", "monsters", "snapshots", "killstats"]
+known-first-party = ["apps"]
 
 [tool.mypy]
 python_version = "3.12"

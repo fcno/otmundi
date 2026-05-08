@@ -47,6 +47,7 @@ class MonsterConfig(models.Model):
     )
 
     class Meta:
+        app_label = "killstats"
         verbose_name = _("monster config")
         verbose_name_plural = _("monster configs")
 

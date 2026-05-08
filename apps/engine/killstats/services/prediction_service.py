@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from apps.engine.killstats.models.monster_spawn_event import MonsterSpawnEvent
-from apps.game_data.monsters.models.monster import Monster
+from apps.game_data.monsters.models import Monster
 from apps.game_data.worlds.models.world import World
 
 

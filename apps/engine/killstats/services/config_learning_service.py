@@ -3,7 +3,7 @@ from django.db.models.functions import Lag
 
 from apps.engine.killstats.models.monster_config import MonsterConfig
 from apps.engine.killstats.models.monster_spawn_event import MonsterSpawnEvent
-from apps.game_data.monsters.models.monster import Monster
+from apps.game_data.monsters.models import Monster
 
 
 class ConfigLearningService:

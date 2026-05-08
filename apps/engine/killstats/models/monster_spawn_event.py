@@ -49,6 +49,7 @@ class MonsterSpawnEvent(models.Model):
     )
 
     class Meta:
+        app_label = "killstats"
         verbose_name = _("monster spawn event")
         verbose_name_plural = _("monster spawn events")
         ordering = ["-timestamp"]
