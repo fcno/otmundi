@@ -6,7 +6,6 @@ from django.utils.translation import gettext_lazy as _
 
 class World(models.Model):
     class Meta:
-        app_label = "worlds"
         verbose_name = _("world")
         verbose_name_plural = _("worlds")
 

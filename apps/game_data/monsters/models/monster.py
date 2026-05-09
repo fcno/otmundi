@@ -6,7 +6,6 @@ from django.utils.translation import gettext_lazy as _
 
 class Monster(models.Model):
     class Meta:
-        app_label = "monsters"
         verbose_name = _("monster")
         verbose_name_plural = _("monsters")
 

@@ -25,7 +25,6 @@ class User(AbstractUser):
     )
 
     class Meta:
-        app_label = "users"
         verbose_name = _("user")
         verbose_name_plural = _("users")
         db_table = "auth_user"

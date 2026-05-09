@@ -30,7 +30,6 @@ class UserMonsterPreference(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        app_label = "preferences"
         verbose_name = _("user monster preference")
         verbose_name_plural = _("user monster preferences")
         unique_together = ("user", "monster")

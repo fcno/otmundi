@@ -1,1 +1,1 @@
-from .user import User as User
+from apps.identity.users.models.user import User as User
