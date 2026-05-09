@@ -12,6 +12,23 @@
 </head>
 <body class="min-h-screen flex flex-col bg-base-100 text-base-content">
 
+    {# Container de Toasts (Mensagens flutuantes) #}
+    {% if messages %}
+    <div class="toast toast-top toast-end z-[100]" id="toast-container">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} shadow-lg transition-all duration-500 ease-in-out cursor-pointer group relative overflow-hidden"
+                 onclick="this.remove()"
+                 onmouseenter="pauseToast(this)"
+                 onmouseleave="resumeToast(this)">
+                <span>{{ message }}</span>
+                <button class="btn btn-ghost btn-xs">✕</button>
+                {# Barra de progresso visual #}
+                <div class="absolute bottom-0 left-0 h-1 bg-black/20 w-full progress-bar"></div>
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <header class="navbar bg-base-100 px-4">
         <div class="flex-1">
             <a href="/" class="btn btn-ghost text-xl font-black tracking-tighter">
@@ -38,7 +55,7 @@
 
     <footer class="footer footer-center p-10 bg-base-100">
         <aside>
-            <p class="font-bold text-lg">Otmundi Project</p> 
+            <p class="font-bold text-lg">{% translate "Otmundi Project" %}</p> 
             <p>{% translate "Monitoramento Inteligente de Bosses" %} © {% now "Y" %}</p>
         </aside>
     </footer>
@@ -46,5 +63,46 @@
     {% if debug %}
         {% django_browser_reload_script %}
     {% endif %}
+
+    <script>
+        function pauseToast(el) {
+            el.style.animationPlayState = 'paused';
+            const bar = el.querySelector('.progress-bar');
+            if (bar) bar.style.animationPlayState = 'paused';
+        }
+
+        function resumeToast(el) {
+            el.style.animationPlayState = 'running';
+            const bar = el.querySelector('.progress-bar');
+            if (bar) bar.style.animationPlayState = 'running';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const toasts = document.querySelectorAll('.toast .alert');
+            toasts.forEach(toast => {
+                // Define a duração (ex: 5 segundos)
+                const duration = 5000;
+                
+                // Adiciona a animação da barra de progresso via JS para flexibilidade
+                const bar = toast.querySelector('.progress-bar');
+                bar.style.animation = `shrink ${duration}ms linear forwards`;
+
+                // Remove o elemento após o tempo
+                setTimeout(() => {
+                    if (toast.parentElement) {
+                        toast.classList.add('opacity-0', 'translate-x-full');
+                        setTimeout(() => toast.remove(), 500);
+                    }
+                }, duration);
+            });
+        });
+    </script>
+
+    <style>
+        @keyframes shrink {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+    </style>
 </body>
 </html>

@@ -18,15 +18,6 @@
         </div>
     </header>
 
-    {# Mensagens de feedback da View #}
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert {{ message.tags }} mb-6 shadow-lg">
-                <span>{{ message }}</span>
-            </div>
-        {% endfor %}
-    {% endif %}
-
     <div class="overflow-x-auto bg-base-100 rounded-lg shadow border border-base-300">
         <table class="table w-full">
             <thead>
@@ -46,7 +37,7 @@
                             <div class="text-xs text-base-content/50 italic">
                                 {% translate "Last validation" %}: {{ boss.config.validated_at|date:"Y-m-d" }}
                                 {% if boss.config.validated_by %}
-                                    by {{ boss.config.validated_by.username }}
+                                    {% translate "by" %} {{ boss.config.validated_by.username }}
                                 {% endif %}
                             </div>
                         {% endif %}
