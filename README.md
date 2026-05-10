@@ -4,7 +4,9 @@ Sistema de monitoramento e ingestão de dados para mundos e monstros (Open Tibia
 
 ## 🎯 Objetivo do Projeto
 
-O Otmundi visa fornecer uma infraestrutura robusta para a gestão de estatísticas de jogo (Kill Stats). O foco principal é a integridade dos dados, garantindo que o ciclo de vida da informação — desde a raspagem (scraping) até a persistência no banco de dados — ocorra sem erros silenciosos ou inconsistências. Além disso, o sistema conta com um motor de aprendizado automático para identificar janelas de spawn baseadas no histórico real de eventos.
+O Otmundi fornece uma infraestrutura robusta para a gestão de estatísticas de jogo. O foco principal é a integridade dos dados, garantindo que o ciclo de vida da informação — desde a extração até a persistência — ocorra sem inconsistências.
+
+O sistema utiliza um motor de aprendizado automático para prever janelas de spawn baseadas em dados históricos e oferece uma interface de curadoria dedicada, permitindo que administradores validem as sugestões do sistema e realizem o ajuste fino das configurações de cada criatura.
 
 ## 🏗️ Arquitetura e Estrutura do Sistema
 
@@ -12,34 +14,46 @@ O projeto segue uma arquitetura baseada em camadas para garantir a separação d
 
 * **Camada de Ingestão (Providers)**: Responsável pela comunicação externa e normalização primária dos dados brutos. Utiliza `TypedDict` para garantir contratos de dados rígidos desde a entrada.
 * **Camada de Serviços (Services)**: Contém a lógica de negócio central. Realiza a sanitização de dados, orquestra a validação e gerencia o `ConfigLearningService` para recalibração de intervalos.
-* **Camada de Eventos (Signals)**: Automação que utiliza Django Signals para disparar o aprendizado de metadados sempre que uma nova morte ou "puff" é registrado.
-* **Camada de Persistência (Repositories)**: Abstrai a lógica do banco de dados (Django ORM), permitindo que o serviço foque na regra de negócio enquanto o repositório lida com a criação de registros e relacionamentos complexos.
-* **Helpers e Validadores**: Utilitários globais para sanitização recursiva e um pipeline de validação/normalização que assegura que apenas dados válidos cheguem ao banco.
+* **Camada de Eventos (Signals)**: Automação que utiliza Django Signals para disparar o aprendizado das configurações sempre que uma nova morte ou "puff" é registrado.
+* **Camada de Persistência (Repositories)**: Abstrai a lógica do banco de dados (Django ORM), permitindo que o serviço foque na regra de negócio enquanto o repositório lida com a criação de registros.
+
+* **Camada de Interface (UI/Templates)**: Interface responsiva construída com Tailwind CSS v4 e DaisyUI. Utiliza HTMX para interações dinâmicas e possui um sistema centralizado de Toasts (notificações) com lógica de auto-dismiss e pause-on-hover.
+
+* **Estrutura de Módulos**: Todos os apps estão concentrados no diretório apps/. O projeto exige o uso de imports absolutos (ex: from apps.app_name...) para garantir a integridade do registro de modelos e evitar conflitos de namespace.
 
 ## 🧠 Motor de Aprendizado (Config Learning)
 
-O sistema analisa automaticamente o histórico de `MonsterSpawnEvent` para gerar inteligência:
+O sistema analisa automaticamente o histórico de eventos para gerar inteligência sobre o comportamento das criaturas:
 
 * **Detecção de Janelas**: Identifica os intervalos mínimo e máximo observados entre aparições.
-* **Tratamento de Outliers**: Filtra erros de log ignorando intervalos inferiores a 24 horas (`delta.days >= 1`).
-* **Puff & Kill**: Trata desaparecimentos (puffs) e mortes confirmadas com o mesmo peso estatístico para reset de janela.
-* **Cold Start**: O aprendizado inicia a partir da segunda ocorrência registrada para evitar ruído estatístico.
+
+* **Tratamento de Outliers**: Filtra ruídos estatísticos ignorando intervalos inconsistentes.
+
+* **Puff & Kill**: Trata desaparecimentos (puffs) e mortes confirmadas com o mesmo peso para o reset da janela de spawn.
+
+* **Curadoria Humana**: As predições geradas pelo motor são apresentadas em uma interface dedicada para validação e ajuste fino por administradores.
 
 ## 📂 Fluxo de Gestão de Arquivos (Data Pipeline)
 
 O sistema gerencia o estado da ingestão através de uma estrutura de diretórios na raiz do projeto:
 
-* `data/pending/`: Local para colocar novos arquivos JSON para processamento.
-* `data/imported/`: Arquivos processados com sucesso são movidos para cá automaticamente.
-* `data/error/`: Arquivos que falharam na validação ou processamento são movidos para cá para análise.
+* `data/pending/`: Local para novos arquivos JSON para processamento.
+
+* `data/imported/`: Arquivos processados com sucesso.
+
+* `data/error/`: Arquivos que falharam na validação, preservados para análise técnica.
 
 ## 🛠️ Tecnologias e Estratégia de Qualidade
 
-* **Framework**: Django e Django REST Framework.
-* **Banco de Dados**: PostgreSQL com uso de Window Functions (`LAG`) para análise temporal de alta performance.
-* **I18n**: Suporte total a localização e tradução via arquivos `.po/.mo` (Locales).
-* **Análise Estática**: Uso rigoroso de `Mypy` para verificação de tipos e `Ruff/Black` para padronização de estilo.
-* **Testes**: Suíte baseada em `Pytest` com foco em testes de integração reais, garantindo que o fluxo Payload -> Service -> Repository -> DB funcione integralmente.
+* **Backend**: Django com PostgreSQL, utilizando Window Functions (LAG) para análise temporal de alta performance.
+
+* **Frontend**: Tailwind CSS v4, DaisyUI e HTMX para uma interface moderna e interações assíncronas.
+
+* **Qualidade de Código**: Uso rigoroso de `Mypy` (tipagem), `Ruff` (linter) e `Black` (formatador).
+
+* **I18n**: Suporte total a tradução via tags de localização do Django em templates e código.
+
+* **Testes**: Suíte baseada em `Pytest`, garantindo a integridade dos modelos, cálculos de predição e regras de negócio como a exclusão mútua de preferências.
 
 ---
 
@@ -84,6 +98,22 @@ python manage.py compilemessages
 python manage.py runserver
 `
 
+### 6. Inicializar o Frontend (Tailwind CSS v4)
+
+Como o projeto utiliza Tailwind v4 com DaisyUI, você precisa compilar os estilos para que a interface e os Toasts apareçam corretamente:
+
+`powershell
+# Instala as dependências do Node
+npm install
+
+# Compila e monitora mudanças no CSS
+npx tailwindcss -i ./theme/static_src/src/styles.css -o ./theme/static/css/dist/styles.css --watch
+
+ou
+
+python manage.py tailwind start
+`
+
 ---
 
 ## ⚙️ Operações: Ingestão de Dados
@@ -102,10 +132,10 @@ python manage.py ingest_killstats nome_do_arquivo.json
 O projeto utiliza um pipeline de validação para impedir a entrada de código que não siga os padrões estabelecidos:
 
 * **Validação Completa**: `.\scripts\validate.ps1`
-* **Rodar Testes**: `pytest` (Os testes garantem a integridade de todos os campos de métricas, o isolamento de locales e o aprendizado de metadados).
+* **Rodar Testes**: `pytest` (Garante a integridade das métricas, o isolamento de locales, a exclusão mútua de preferências e o registro único de modelos).
 * **Formatar Código**: `black .`
 * **Verificar Linter**: `ruff check . --fix`
-* **Análise de Tipos**: `mypy .` (Obrigatório passar sem erros de análise semântica).
+* **Análise de Tipos**: `mypy .` (Obrigatório passar sem erros de análise semântica para garantir contratos de dados).
 
 ---
 
@@ -121,9 +151,11 @@ cz commit
 
 ## 📂 Organização de Pastas Importantes
 
-* **apps/ingestion**: Lógica de entrada de dados, Providers, Services e Commands.
-* **apps/killstats**: Modelos específicos de estatísticas de morte, aprendizado de metadados e Signals.
-* **apps/monsters**: Definições de criaturas e metadados calculados.
-* **apps/core**: Helpers de sanitização, validadores base e exceções customizadas.
-* **apps/snapshots**: Modelos de dados para registros históricos.
+Para evitar conflitos de namespace e garantir a escalabilidade, todos os aplicativos residem no diretório `apps/` e devem ser referenciados via imports absolutos:
+
+* **apps/engine**: Lógica de ingestão de dados, processamento de `killstats`, aprendizado das configurações e a interface de Curadoria.
+* **apps/game_data**: Definições centrais do domínio, como Monstros e Mundos.
+* **apps/identity**: Gestão de usuários, autenticação e preferências.
+* **apps/core**: Helpers de sanitização, validadores base, utilitários de tradução e exceções customizadas.
+* **apps/snapshots**: Registro histórico e estados temporais do jogo.
 * **data/**: Estrutura de diretórios para o pipeline de arquivos (pending, imported, error).
