@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 from django.conf import settings
-from django.core.management import CommandError, call_command
+from django.core.management import call_command
 
 from apps.engine.snapshots.models.snapshot import Snapshot
 
@@ -17,7 +17,7 @@ class TestIngestKillStatsCommand:
         Configura a estrutura de diretórios e o BASE_DIR para o teste.
         O uso de pytest.MonkeyPatch garante a conformidade com o Mypy.
         """
-        data_dir = tmp_path / "data"
+        data_dir = tmp_path / "data" / "killstats"
         (data_dir / "pending").mkdir(parents=True)
         (data_dir / "imported").mkdir()
         (data_dir / "error").mkdir()
@@ -34,8 +34,9 @@ class TestIngestKillStatsCommand:
         filename = "valid_killstats.json"
         snapshot_id = "success_state_999"
         world_name = "Antica"
-        pending_dir = settings.BASE_DIR / "data" / "pending"
-        imported_dir = settings.BASE_DIR / "data" / "imported"
+
+        pending_dir = settings.BASE_DIR / "data" / "killstats" / "pending"
+        imported_dir = settings.BASE_DIR / "data" / "killstats" / "imported"
 
         pending_file = pending_dir / filename
         data = {
@@ -46,16 +47,16 @@ class TestIngestKillStatsCommand:
         }
         pending_file.write_text(json.dumps(data))
 
-        # 2. Verificação de Estado Inicial (Pre-conditions)
+        # 2. Verificação de Estado Inicial
         assert pending_file.exists()
         assert not (imported_dir / filename).exists()
         assert not Snapshot.objects.filter(snapshot_id=snapshot_id).exists()
 
         # 3. Execução
         out = StringIO()
-        call_command("ingest_killstats", filename, stdout=out)
+        call_command("ingest_killstats", stdout=out)
 
-        # 4. Verificação de Estado Final (Post-conditions)
+        # 4. Verificação de Estado Final
         assert not pending_file.exists()
         assert (imported_dir / filename).exists()
 
@@ -74,8 +75,8 @@ class TestIngestKillStatsCommand:
         """
         # 1. Preparação
         filename = "invalid_data.json"
-        pending_dir = settings.BASE_DIR / "data" / "pending"
-        error_dir = settings.BASE_DIR / "data" / "error"
+        pending_dir = settings.BASE_DIR / "data" / "killstats" / "pending"
+        error_dir = settings.BASE_DIR / "data" / "killstats" / "error"
 
         pending_file = pending_dir / filename
         # Payload sem 'snapshot_id' para forçar falha no pipeline de validação
@@ -91,7 +92,7 @@ class TestIngestKillStatsCommand:
 
         # 3. Execução
         err = StringIO()
-        call_command("ingest_killstats", filename, stderr=err)
+        call_command("ingest_killstats", stderr=err)
 
         # 4. Verificação de Estado Final
         assert not pending_file.exists()
@@ -99,8 +100,3 @@ class TestIngestKillStatsCommand:
 
         # O erro deve indicar o campo técnico, independente da tradução
         assert "snapshot_id" in err.getvalue().lower()
-
-    def test_command_file_not_found_raises_error(self) -> None:
-        """Garante que o comando lança CommandError se o ficheiro não existir."""
-        with pytest.raises(CommandError):
-            call_command("ingest_killstats", "missing.json")

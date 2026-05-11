@@ -16,9 +16,7 @@ O projeto segue uma arquitetura baseada em camadas para garantir a separação d
 * **Camada de Serviços (Services)**: Contém a lógica de negócio central. Realiza a sanitização de dados, orquestra a validação e gerencia o `ConfigLearningService` para recalibração de intervalos.
 * **Camada de Eventos (Signals)**: Automação que utiliza Django Signals para disparar o aprendizado das configurações sempre que uma nova morte ou "puff" é registrado.
 * **Camada de Persistência (Repositories)**: Abstrai a lógica do banco de dados (Django ORM), permitindo que o serviço foque na regra de negócio enquanto o repositório lida com a criação de registros.
-
 * **Camada de Interface (UI/Templates)**: Interface responsiva construída com Tailwind CSS v4 e DaisyUI. Utiliza HTMX para interações dinâmicas e possui um sistema centralizado de Toasts (notificações) com lógica de auto-dismiss e pause-on-hover.
-
 * **Estrutura de Módulos**: Todos os apps estão concentrados no diretório apps/. O projeto exige o uso de imports absolutos (ex: from apps.app_name...) para garantir a integridade do registro de modelos e evitar conflitos de namespace.
 
 ## 🧠 Motor de Aprendizado (Config Learning)
@@ -26,33 +24,25 @@ O projeto segue uma arquitetura baseada em camadas para garantir a separação d
 O sistema analisa automaticamente o histórico de eventos para gerar inteligência sobre o comportamento das criaturas:
 
 * **Detecção de Janelas**: Identifica os intervalos mínimo e máximo observados entre aparições.
-
 * **Tratamento de Outliers**: Filtra ruídos estatísticos ignorando intervalos inconsistentes.
-
 * **Puff & Kill**: Trata desaparecimentos (puffs) e mortes confirmadas com o mesmo peso para o reset da janela de spawn.
-
 * **Curadoria Humana**: As predições geradas pelo motor são apresentadas em uma interface dedicada para validação e ajuste fino por administradores.
 
 ## 📂 Fluxo de Gestão de Arquivos (Data Pipeline)
 
-O sistema gerencia o estado da ingestão através de uma estrutura de diretórios na raiz do projeto:
+O sistema gerencia a ingestão de forma segmentada por tipo de dado. Cada módulo possui sua própria estrutura sob o diretório `data/`:
 
-* `data/pending/`: Local para novos arquivos JSON para processamento.
+* `data/<modulo>/pending/`: Local para novos arquivos JSON para processamento. (ex: `data/killstats/pending/`).
+* `data/<modulo>/imported/`: Arquivos processados com sucesso.
+* `data/<modulo>/error/`: Arquivos que falharam na validação, preservados para análise técnica.
 
-* `data/imported/`: Arquivos processados com sucesso.
-
-* `data/error/`: Arquivos que falharam na validação, preservados para análise técnica.
 
 ## 🛠️ Tecnologias e Estratégia de Qualidade
 
 * **Backend**: Django com PostgreSQL, utilizando Window Functions (LAG) para análise temporal de alta performance.
-
 * **Frontend**: Tailwind CSS v4, DaisyUI e HTMX para uma interface moderna e interações assíncronas.
-
 * **Qualidade de Código**: Uso rigoroso de `Mypy` (tipagem), `Ruff` (linter) e `Black` (formatador).
-
 * **I18n**: Suporte total a tradução via tags de localização do Django em templates e código.
-
 * **Testes**: Suíte baseada em `Pytest`, garantindo a integridade dos modelos, cálculos de predição e regras de negócio como a exclusão mútua de preferências.
 
 ---

@@ -32,7 +32,10 @@ class KillStatsIngestService:
         self.provider = provider
         self.repository = repository
 
-    def ingest(self, raw: dict[str, Any]) -> Snapshot:
+    def ingest(self, raw: dict[str, Any], source_file: str = "") -> Snapshot:
+        """
+        Processa os dados brutos, valida via DTO e persiste através do repositório.
+        """
         sanitized = sanitize_data(raw)
         raw_input = cast(RawProviderInput, sanitized)
         data: ProviderOutput = self.provider.normalize_raw(raw_input)
@@ -133,4 +136,4 @@ class KillStatsIngestService:
         )
 
         # O Service entrega o DTO validado para o Repository salvar
-        return self.repository.save_world_kill_stats(dto)
+        return self.repository.save_world_kill_stats(dto, source_file=source_file)
