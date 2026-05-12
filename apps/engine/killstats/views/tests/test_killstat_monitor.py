@@ -25,8 +25,12 @@ class TestBossMonitorView:
     ) -> None:
         """Valida que a view exibe todos os monstros, mesmo sem metadados."""
         World.objects.create(name="antica")
-        Monster.objects.create(name="orshabaal", is_active=True)
-        Monster.objects.create(name="rat", is_active=True)
+        m1 = Monster.objects.create(name="orshabaal")
+        MonsterConfig.objects.create(monster=m1, is_active=True)
+
+        m2 = Monster.objects.create(name="rat")
+        MonsterConfig.objects.create(monster=m2, is_active=True)
+        
 
         url = reverse("killstats:boss_monitor")
         response = client.get(url)

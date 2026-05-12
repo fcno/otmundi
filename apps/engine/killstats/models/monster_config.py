@@ -34,6 +34,10 @@ class MonsterConfig(models.Model):
         validators=[MinValueValidator(1)],
         help_text=_("The upper bound of the spawn window validated by an admin."),
     )
+    is_active = models.BooleanField(
+        default=False,
+        help_text=_("Define se o monstro será exibido no monitor de bosses."),
+    )
 
     # Campos de Auditoria
     validated_at = models.DateTimeField(_("validated at"), null=True, blank=True)
@@ -52,8 +56,13 @@ class MonsterConfig(models.Model):
         verbose_name_plural = _("monster configs")
 
     def __str__(self) -> str:
+        status = _("Active") if self.is_active else _("Inactive")
         min_val = self.min_interval if self.min_interval is not None else "?"
         max_val = self.max_interval if self.max_interval is not None else "?"
-        return _("Config: {monster} ({min}-{max} days)").format(
-            monster=self.monster.name, min=min_val, max=max_val
+        
+        return _("{status} | Config: {monster} ({min}-{max} days)").format(
+            status=status,
+            monster=self.monster.name,
+            min=min_val,
+            max=max_val
         )

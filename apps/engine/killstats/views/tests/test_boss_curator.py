@@ -16,7 +16,9 @@ class TestBossCuratorView:
     def setup(self, client: Client) -> None:
         self.client = client
         self.user = User.objects.create_user(username="curator_boss", password="123")
-        self.monster = Monster.objects.create(name="ghazbaran", is_active=True)
+        self.monster = Monster.objects.create(name="ghazbaran")
+        # Config inicial ativa
+        self.config = MonsterConfig.objects.create(monster=self.monster, is_active=True)
         self.url = reverse("killstats:boss_curator")
 
     def test_curator_access_denied_without_permission(self) -> None:
@@ -31,7 +33,7 @@ class TestBossCuratorView:
         self.user.user_permissions.add(perm)
         self.client.force_login(self.user)
 
-        payload = {"monster_id": self.monster.id, "min_interval": 2, "max_interval": 4}
+        payload = {"monster_id": self.monster.id, "min_interval": 2, "max_interval": 4, "is_active": False }
         response = self.client.post(self.url, payload)
 
         assert response.status_code == 302
@@ -40,6 +42,7 @@ class TestBossCuratorView:
         assert config.max_interval == 4
         assert config.validated_by == self.user
         assert config.validated_at is not None
+        assert config.is_active is False
 
     def test_curator_post_error_message_display(self) -> None:
         """Valida que a mensagem de erro do formulário é repassada para o context do Django."""

@@ -34,7 +34,7 @@ class BossCuratorView(PermissionRequiredMixin, CuratorBaseView):
         """
         Retorna apenas bosses ativos, consistente com o Monitor.
         """
-        return Monster.objects.filter(is_active=True).prefetch_related("config")
+        return Monster.objects.filter(config__is_active=True).select_related("config")
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)

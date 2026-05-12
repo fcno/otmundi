@@ -29,7 +29,7 @@ class KillstatMonitorView(BaseView):
         """
         Retorna apenas os monstros marcados explicitamente para exibição, consistente com o curator.
         """
-        return Monster.objects.filter(is_active=True)
+        return Monster.objects.filter(config__is_active=True)
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
