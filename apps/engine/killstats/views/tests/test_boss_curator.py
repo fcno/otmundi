@@ -33,7 +33,12 @@ class TestBossCuratorView:
         self.user.user_permissions.add(perm)
         self.client.force_login(self.user)
 
-        payload = {"monster_id": self.monster.id, "min_interval": 2, "max_interval": 4, "is_active": False }
+        payload = {
+            "monster_id": self.monster.id,
+            "min_interval": 2,
+            "max_interval": 4,
+            "is_active": False,
+        }
         response = self.client.post(self.url, payload)
 
         assert response.status_code == 302

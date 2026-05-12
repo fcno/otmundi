@@ -3,6 +3,7 @@ from django.db.utils import IntegrityError
 from django.utils.timezone import now
 
 from apps.engine.killstats.models import KillStat
+from apps.engine.killstats.models.monster_config import MonsterConfig
 from apps.engine.snapshots.models import Snapshot
 from apps.game_data.monsters.models import Monster
 from apps.game_data.worlds.models import World
@@ -18,7 +19,8 @@ def test_create_killstat() -> None:
         source_file="file.json",
     )
 
-    monster = Monster.objects.create(name="Dragon", is_active=True)
+    monster = Monster.objects.create(name="Dragon")
+    MonsterConfig.objects.create(monster=monster, is_active=True)
 
     ks = KillStat.objects.create(
         snapshot=snapshot,
@@ -48,7 +50,8 @@ def test_unique_snapshot_monster() -> None:
         source_file="file.json",
     )
 
-    monster = Monster.objects.create(name="Dragon", is_active=True)
+    monster = Monster.objects.create(name="Dragon")
+    MonsterConfig.objects.create(monster=monster, is_active=True)
 
     KillStat.objects.create(
         snapshot=snapshot,

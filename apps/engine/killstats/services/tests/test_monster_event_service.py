@@ -4,6 +4,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
+from apps.engine.killstats.models.monster_config import MonsterConfig
 from apps.engine.killstats.models.monster_spawn_event import MonsterSpawnEvent
 from apps.engine.killstats.services.monster_event_service import MonsterEventService
 from apps.game_data.monsters.models.monster import Monster
@@ -17,7 +18,8 @@ class TestMonsterSpawnEvent:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
         self.world = World.objects.create(name="Antica")
-        self.monster = Monster.objects.create(name="Orshabaal", is_active=True)
+        self.monster = Monster.objects.create(name="Orshabaal")
+        MonsterConfig.objects.create(monster=self.monster, is_active=True)
         self.user = User.objects.create_user(username="mod_test", password="123")
 
     def test_spawn_event_full_creation(self) -> None:

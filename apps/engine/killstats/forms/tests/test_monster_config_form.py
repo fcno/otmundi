@@ -35,3 +35,13 @@ class TestMonsterConfigForm:
         form = MonsterConfigForm(data={"min_interval": 10, "max_interval": "abc"})
         assert form.is_valid() is False
         assert "max_interval" in form.errors
+
+    def test_form_includes_is_active(self) -> None:
+        """Garante que o campo de controle de visibilidade está presente no form."""
+        form = MonsterConfigForm()
+        assert "is_active" in form.fields
+
+    def test_form_valid_toggle_only(self) -> None:
+        """Valida que é possível alterar apenas o status de ativação."""
+        form = MonsterConfigForm(data={"is_active": True})
+        assert form.is_valid() is True

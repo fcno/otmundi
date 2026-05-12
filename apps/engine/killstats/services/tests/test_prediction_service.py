@@ -18,17 +18,20 @@ class TestPredictionService:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
         self.world = World.objects.create(name="Antica")
-        self.monster = Monster.objects.create(name="Orshabaal", is_active=True)
-        # Janela de 10 a 20 dias (Total de 11 dias possíveis)
+        self.monster = Monster.objects.create(name="orshabaal")
+        self.now = timezone.now()
+
+        # Janela de 10 a 20 dias (Total de 11 dias possíveis para o cálculo de chance)
         self.config = MonsterConfig.objects.create(
-            monster=self.monster, min_interval=10, max_interval=20
+            monster=self.monster, is_active=True, min_interval=10, max_interval=20
         )
 
-    def _create_event(self, days_ago: int) -> None:
-        """Helper para criar eventos no passado."""
-        timestamp = timezone.now() - timedelta(days=days_ago)
+    def _create_event(self, days_ago: int, monster: Monster | None = None) -> None:
+        """Helper para criar eventos no passado com suporte a monstros opcionais."""
+        target_monster = monster or self.monster
+        timestamp = self.now - timedelta(days=days_ago)
         MonsterSpawnEvent.objects.create(
-            monster=self.monster,
+            monster=target_monster,
             world=self.world,
             timestamp=timestamp,
         )
@@ -75,7 +78,7 @@ class TestPredictionService:
         assert result["chance_percentage"] == 100.0
 
     def test_status_missing_probable_puff(self) -> None:
-        """Extremo: Passou 20% do limite máximo."""
+        """Extremo: Passou 20% do limite máximo (20 * 1.2 = 24 dias)."""
         self._create_event(days_ago=25)
         result = PredictionService.get_prediction(self.monster, self.world)
         assert result["status_code"] == PredictionStatus.MISSING.value
@@ -93,28 +96,27 @@ class TestPredictionService:
         """Garante que o label traduzido está sendo retornado."""
         self._create_event(days_ago=5)
         result = PredictionService.get_prediction(self.monster, self.world)
-        # Verifica se o texto traduzido (label) não é igual à chave do enum
         assert result["status"] == str(PredictionStatus.NO_CHANCE.label)
 
     def test_status_collecting_no_config_record(self) -> None:
         """Garante status COLLECTING se o registro de metadados nem existir."""
-        # Criamos um monstro novo sem criar o MonsterConfig para ele
-        new_monster = Monster.objects.create(name="Morgaroth", is_active=True)
+        # Nome único para o teste
+        new_monster = Monster.objects.create(name="morgaroth-test-service")
+        # Não criamos MonsterConfig para ele
         result = PredictionService.get_prediction(new_monster, self.world)
 
         assert result["status_code"] == PredictionStatus.COLLECTING.value
         assert result["chance_percentage"] == 0.0
 
     def test_enum_weights_priority_order(self) -> None:
-        """Valida que a hierarquia de pesos segue a urgência de exibição."""
-        # Quanto menor o peso, maior a prioridade
+        """Valida que a hierarquia de pesos segue a urgência de exibição (Menor = Topo)."""
         assert PredictionStatus.OVERDUE.weight < PredictionStatus.EXPECTED.weight
         assert PredictionStatus.EXPECTED.weight < PredictionStatus.NO_CHANCE.weight
         assert PredictionStatus.NO_CHANCE.weight < PredictionStatus.MISSING.weight
         assert PredictionStatus.MISSING.weight < PredictionStatus.COLLECTING.weight
 
     def test_all_enum_weights_are_correct(self) -> None:
-        """Valida a hierarquia completa de pesos para ordenação."""
+        """Valida os valores exatos dos pesos para ordenação multinível."""
         assert PredictionStatus.OVERDUE.weight == 0
         assert PredictionStatus.EXPECTED.weight == 1
         assert PredictionStatus.NO_CHANCE.weight == 2
@@ -122,7 +124,7 @@ class TestPredictionService:
         assert PredictionStatus.COLLECTING.weight == 4
 
     def test_weight_is_consistent_with_status_code(self) -> None:
-        """Garante que acessar pelo status_code (string) mantém o peso."""
+        """Garante que o acesso dinâmico pelo código mantém o peso correto."""
         for status in PredictionStatus:
-            # Simula o que a View faz: PredictionStatus['OVERDUE'].weight
+            # Simula: PredictionStatus['EXPECTED'].weight
             assert PredictionStatus[status.value].weight == status.weight

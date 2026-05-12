@@ -13,7 +13,8 @@ from apps.game_data.worlds.models.world import World
 class TestKillstatsSignals:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
-        self.monster = Monster.objects.create(name="gaz'haragoth", is_active=True)
+        self.monster = Monster.objects.create(name="gaz'haragoth")
+        MonsterConfig.objects.create(monster=self.monster, is_active=True)
         self.world = World.objects.create(name="ferobra")
         self.now = timezone.now()
 
@@ -70,15 +71,27 @@ class TestKillstatsSignals:
         """
         Garante que o evento de um monstro não afeta o metadado de outro.
         """
-        other_monster = Monster.objects.create(name="morgaroth", is_active=True)
+        # 1. Criamos o monstro B com uma configuração específica
+        other_monster = Monster.objects.create(name="morgaroth")
+        other_config = MonsterConfig.objects.create(
+            monster=other_monster,
+            is_active=True,
+            min_interval=10,  # Valor para controle
+            max_interval=20,
+        )
 
-        # Criamos evento para o Gaz'haragoth
+        # 2. Criamos um evento para o monstro A (self.monster)
+        # Isso disparará sinais que poderiam tentar recalcular intervalos
         MonsterSpawnEvent.objects.create(
             monster=self.monster, world=self.world, timestamp=self.now
         )
 
-        # O metadado do Morgaroth não deve existir/ser afetado
-        assert not MonsterConfig.objects.filter(monster=other_monster).exists()
+        # 3. Verificamos se a config do monstro B continua EXATAMENTE igual
+        other_config.refresh_from_db()
+        assert other_config.min_interval == 10
+        assert other_config.max_interval == 20
+        assert other_config.is_active is True
+        assert other_config.monster.name == "morgaroth"
 
     def test_signal_learning_with_puff_events(self) -> None:
         """

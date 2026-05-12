@@ -6,6 +6,7 @@ from django.utils import timezone
 from apps.engine.killstats.ingestion.services.monster_event_ingest_service import (
     MonsterEventIngestService,
 )
+from apps.engine.killstats.models.monster_config import MonsterConfig
 from apps.engine.killstats.models.monster_spawn_event import MonsterSpawnEvent
 from apps.game_data.monsters.models.monster import Monster
 from apps.game_data.worlds.models.world import World
@@ -16,7 +17,8 @@ class TestMonsterEventIngestService:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
         self.service = MonsterEventIngestService()
-        self.monster = Monster.objects.create(name="orshabaal", is_active=True)
+        self.monster = Monster.objects.create(name="orshabaal")
+        MonsterConfig.objects.create(monster=self.monster, is_active=True)
         self.world = World.objects.create(name="antica")
 
     def test_create_event_from_ingestion_fields_integrity(self) -> None:
@@ -52,7 +54,8 @@ class TestMonsterEventIngestService:
         Garante que o serviço vincula o evento ao monstro correto
         mesmo se múltiplos forem processados.
         """
-        ferumbras = Monster.objects.create(name="ferumbras", is_active=True)
+        ferumbras = Monster.objects.create(name="ferumbras")
+        MonsterConfig.objects.create(monster=ferumbras, is_active=True)
         now = timezone.now()
 
         event_orsh = self.service.create_event_from_ingestion(

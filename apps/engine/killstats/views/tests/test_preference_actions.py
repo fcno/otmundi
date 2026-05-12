@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client
 from django.urls import reverse
 
+from apps.engine.killstats.models.monster_config import MonsterConfig
 from apps.engine.killstats.models.user_preference import (
     UserKillStatPreference,
 )
@@ -17,7 +18,8 @@ class TestToggleMonsterPreferenceView:
     def setup(self, client: Client) -> None:
         self.client = client
         self.user = User.objects.create_user(username="test_user", password="123")
-        self.monster = Monster.objects.create(name="ghazbaran", is_active=True)
+        self.monster = Monster.objects.create(name="ghazbaran")
+        MonsterConfig.objects.create(monster=self.monster, is_active=True)
         self.url = reverse("killstats:toggle_preference")
 
     def test_toggle_requires_login(self) -> None:

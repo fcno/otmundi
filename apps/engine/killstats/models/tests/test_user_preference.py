@@ -2,6 +2,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.db.utils import IntegrityError
 
+from apps.engine.killstats.models.monster_config import MonsterConfig
 from apps.engine.killstats.models.user_preference import (
     UserKillStatPreference,
 )
@@ -15,7 +16,8 @@ class TestUserKillStatPreference:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
         self.user = User.objects.create_user(username="player_test", password="pw")
-        self.monster = Monster.objects.create(name="Ferumbras", is_active=True)
+        self.monster = Monster.objects.create(name="Ferumbras")
+        MonsterConfig.objects.create(monster=self.monster, is_active=True)
 
     def test_preference_custom_values(self) -> None:
         """Testa a criação com campos específicos e o timestamp de atualização."""
@@ -44,7 +46,8 @@ class TestUserKillStatPreference:
 
     def test_multiple_monsters_same_user(self) -> None:
         """Garante que um usuário pode ter preferências para monstros diferentes."""
-        monster2 = Monster.objects.create(name="Morgaroth", is_active=True)
+        monster2 = Monster.objects.create(name="Morgaroth")
+        MonsterConfig.objects.create(monster=monster2, is_active=True)
         UserKillStatPreference.objects.create(user=self.user, monster=self.monster)
         UserKillStatPreference.objects.create(user=self.user, monster=monster2)
         assert UserKillStatPreference.objects.filter(user=self.user).count() == 2

@@ -16,7 +16,7 @@ else:
 class MonsterConfigForm(BaseForm):
     class Meta:
         model = MonsterConfig
-        fields = ["min_interval", "max_interval"]
+        fields = ["is_active", "min_interval", "max_interval"]
 
     def clean(self) -> dict[str, Any]:
         """

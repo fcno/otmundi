@@ -16,14 +16,18 @@ from apps.game_data.worlds.models.world import World
 class TestConfigLearningService:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
-        self.monster = Monster.objects.create(name="ferumbras", is_active=True)
+        self.monster = Monster.objects.create(name="ferumbras")
+        MonsterConfig.objects.create(monster=self.monster, is_active=True)
         self.world_a = World.objects.create(name="antica")
         self.world_b = World.objects.create(name="belobra")
         self.now = timezone.now()
 
-    def _create_event(self, world: World, days_ago: int) -> None:
+    def _create_event(
+        self, world: World, days_ago: int, monster: Monster | None = None
+    ) -> None:
+        target_monster = monster or self.monster
         MonsterSpawnEvent.objects.create(
-            monster=self.monster,
+            monster=target_monster,
             world=world,
             timestamp=self.now - timedelta(days=days_ago),
         )
@@ -45,35 +49,58 @@ class TestConfigLearningService:
         assert config.max_interval == 15
 
     def test_config_dynamic_creation(self) -> None:
-        """Verifica se o serviço cria o MonsterConfig se ele não existir."""
-        assert MonsterConfig.objects.filter(monster=self.monster).count() == 0
+        """Verifica se o serviço cria o MonsterConfig se ele não existir ao recalibrar."""
+        # 1. Criamos um monstro novo que NÃO tem config (não usamos o self.monster)
+        new_monster = Monster.objects.create(name="ghazbaran")
 
-        self._create_event(self.world_a, 0)
-        self._create_event(self.world_a, 10)
+        # Garantimos que ele nasceu sem config
+        assert not MonsterConfig.objects.filter(monster=new_monster).exists()
 
-        ConfigLearningService.recalibrate_monster(self.monster)
-        assert MonsterConfig.objects.filter(monster=self.monster).exists()
+        # 2. Simulamos eventos para este monstro novo
+        MonsterSpawnEvent.objects.create(
+            monster=new_monster, world=self.world_a, timestamp=self.now
+        )
+        MonsterSpawnEvent.objects.create(
+            monster=new_monster,
+            world=self.world_a,
+            timestamp=self.now - timedelta(days=10),
+        )
+
+        # 3. O serviço deve detectar a ausência e criar a config automaticamente
+        ConfigLearningService.recalibrate_monster(new_monster)
+
+        # 4. Verificação final
+        assert MonsterConfig.objects.filter(monster=new_monster).exists()
+        config = MonsterConfig.objects.get(monster=new_monster)
+        assert (
+            config.is_active is False
+        )  # Por padrão, criação dinâmica deve ser inativa
 
     def test_no_regression_on_wider_knowledge(self) -> None:
         """Garante que o conhecimento não 'encolha' se dados novos forem menos extremos."""
-        # Já sabemos que a janela é 5-20
-        MonsterConfig.objects.create(
-            monster=self.monster, min_interval=5, max_interval=20
-        )
+        # 1. Em vez de criar, pegamos a config que o setup já criou
+        config = MonsterConfig.objects.get(monster=self.monster)
+        config.min_interval = 5
+        config.max_interval = 20
+        config.is_active = True
+        config.save()
 
-        # Novo dado observado: 10 dias (está dentro da janela, não deve mudar nada)
+        # 2. Novo dado observado: 10 dias (dentro da janela 5-20)
         self._create_event(self.world_a, 0)
         self._create_event(self.world_a, 10)
 
+        # 3. Recalibramos
         ConfigLearningService.recalibrate_monster(self.monster)
 
-        config = MonsterConfig.objects.get(monster=self.monster)
+        # 4. Verificamos se os valores CONFIRMADOS (5 e 20) foram preservados
+        config.refresh_from_db()
         assert config.min_interval == 5
         assert config.max_interval == 20
 
     def test_full_recalibration_batch(self) -> None:
         """Testa o processamento em lote para todos os monstros."""
-        monster2 = Monster.objects.create(name="orshabaal", is_active=True)
+        monster2 = Monster.objects.create(name="orshabaal")
+        MonsterConfig.objects.create(monster=monster2, is_active=True)
         self._create_event(self.world_a, 0)  # Ferumbras
         self._create_event(self.world_a, 10)
 
@@ -96,18 +123,27 @@ class TestConfigLearningService:
         1. Primeira kill: Não cria metadados (falta de dados comparativos).
         2. Segunda kill: Cria metadados com min/max idênticos.
         """
-        # 1. Primeira Kill
-        self._create_event(self.world_a, 20)
-        ConfigLearningService.recalibrate_monster(self.monster)
-        assert not MonsterConfig.objects.filter(monster=self.monster).exists()
+        # 1. Criamos um monstro novo sem NENHUMA config vinculada
+        cold_monster = Monster.objects.create(name="ferumbras-cold-start")
 
-        # 2. Segunda Kill (Hoje)
-        self._create_event(self.world_a, 0)
-        ConfigLearningService.recalibrate_monster(self.monster)
+        # 1. Primeira Kill (20 dias atrás)
+        self._create_event(self.world_a, 20, monster=cold_monster)
+        ConfigLearningService.recalibrate_monster(cold_monster)
 
-        assert MonsterConfig.objects.filter(monster=self.monster).exists()
+        # Sem dois eventos, não há intervalo, logo não há config.
+        assert not MonsterConfig.objects.filter(monster=cold_monster).exists()
 
-        config = MonsterConfig.objects.get(monster=self.monster)
-        # O único intervalo observado é de 20 dias
+        # 2. Segunda Kill
+        self._create_event(self.world_a, 0, monster=cold_monster)
+        ConfigLearningService.recalibrate_monster(cold_monster)
+
+        # Verificação final
+        assert MonsterConfig.objects.filter(monster=cold_monster).exists()
+        config = MonsterConfig.objects.get(monster=cold_monster)
+
+        # O único intervalo observado entre as duas kills é de 20 dias
         assert config.min_interval == 20
         assert config.max_interval == 20
+        assert (
+            config.is_active is False
+        )  # Criado automaticamente pelo serviço, deve vir inativo

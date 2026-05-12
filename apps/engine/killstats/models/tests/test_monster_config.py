@@ -14,16 +14,13 @@ class TestMonsterConfig:
 
     def test_create_config_with_null_intervals(self) -> None:
         """Valida que o sistema aceita intervalos nulos (Cenário Cold Start)."""
-        config = MonsterConfig.objects.create(monster=self.monster)
 
-        assert config.monster == self.monster
-        assert config.min_interval is None
-        assert config.max_interval is None
+        assert self.config.monster == self.monster
+        assert self.config.min_interval is None
+        assert self.config.max_interval is None
 
     def test_one_to_one_constraint(self) -> None:
         """Garante que não é possível criar dois metadados para o mesmo monstro."""
-        MonsterConfig.objects.create(monster=self.monster)
-
         with pytest.raises(IntegrityError):
             MonsterConfig.objects.create(monster=self.monster)
 
@@ -45,7 +42,7 @@ class TestMonsterConfig:
 
     def test_cascade_on_monster_delete(self) -> None:
         """Garante que se o monstro sumir, o metadado some junto."""
-        MonsterConfig.objects.create(monster=self.monster)
+        assert MonsterConfig.objects.count() == 1
         self.monster.delete()
         assert MonsterConfig.objects.count() == 0
 

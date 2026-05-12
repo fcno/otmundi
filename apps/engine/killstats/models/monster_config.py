@@ -59,10 +59,7 @@ class MonsterConfig(models.Model):
         status = _("Active") if self.is_active else _("Inactive")
         min_val = self.min_interval if self.min_interval is not None else "?"
         max_val = self.max_interval if self.max_interval is not None else "?"
-        
+
         return _("{status} | Config: {monster} ({min}-{max} days)").format(
-            status=status,
-            monster=self.monster.name,
-            min=min_val,
-            max=max_val
+            status=status, monster=self.monster.name, min=min_val, max=max_val
         )

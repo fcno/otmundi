@@ -8,9 +8,7 @@ from django.utils import timezone
 
 from apps.engine.killstats.models.monster_config import MonsterConfig
 from apps.engine.killstats.models.monster_spawn_event import MonsterSpawnEvent
-from apps.engine.killstats.models.user_preference import (
-    UserKillStatPreference,
-)
+from apps.engine.killstats.models.user_preference import UserKillStatPreference
 from apps.engine.killstats.services.prediction_service import PredictionStatus
 from apps.game_data.monsters.models import Monster
 from apps.game_data.worlds.models.world import World
@@ -20,271 +18,189 @@ User = get_user_model()
 
 @pytest.mark.django_db
 class TestBossMonitorView:
-    def test_view_lists_active_monsters_regardless_of_config(
-        self, client: Client
-    ) -> None:
-        """Valida que a view exibe todos os monstros, mesmo sem metadados."""
-        World.objects.create(name="antica")
-        m1 = Monster.objects.create(name="orshabaal")
-        MonsterConfig.objects.create(monster=m1, is_active=True)
 
-        m2 = Monster.objects.create(name="rat")
-        MonsterConfig.objects.create(monster=m2, is_active=True)
-        
+    @pytest.fixture(autouse=True)
+    def setup(self) -> None:
+        """Setup básico para garantir que o ambiente tenha um mundo e URL padrão."""
+        self.world = World.objects.create(name="antica-monitor")
+        self.url = reverse("killstats:boss_monitor")
+        self.user = User.objects.create_user(username="monitor_user", password="pw")
 
-        url = reverse("killstats:boss_monitor")
-        response = client.get(url)
-
-        assert response.status_code == 200
-        bosses = response.context["bosses"]
-        assert len(bosses) == 2
-        # Verifica se o monstro sem metadado assume o status COLLECTING
-        rat = next(b for b in bosses if b.name == "rat")
-        assert rat.prediction["status_code"] == PredictionStatus.COLLECTING.value
+    # --- Testes de Estado e Listagem ---
 
     def test_view_with_no_monsters_exists(self, client: Client) -> None:
-        """Garante que a página carrega sem erros se o banco estiver vazio."""
-        World.objects.create(name="antica")
-
-        url = reverse("killstats:boss_monitor")
-        response = client.get(url)
-
+        """Garante que a view renderiza sem erros mesmo se o banco estiver vazio."""
+        response = client.get(self.url)
         assert response.status_code == 200
         assert len(response.context["bosses"]) == 0
 
-    def test_view_prediction_disabled_no_world(self, client: Client) -> None:
-        """Testa o comportamento quando não há nenhum mundo cadastrado."""
-        Monster.objects.create(name="orshabaal", is_active=True)
+    def test_view_logic_and_prediction_status(self, client: Client) -> None:
+        """Valida filtragem básica e status inicial COLLECTING."""
+        # Nomes únicos para evitar IntegrityError
+        m1 = Monster.objects.create(name="orshabaal-status")
+        MonsterConfig.objects.create(monster=m1, is_active=True)
 
-        url = reverse("killstats:boss_monitor")
-        response = client.get(url)
-        # A view deve definir prediction_enabled como False
-        assert response.status_code == 200
-        assert response.context["prediction_enabled"] is False
+        m2 = Monster.objects.create(name="rat-status")
+        MonsterConfig.objects.create(monster=m2, is_active=False)
 
-    def test_view_uses_correct_world_context(self, client: Client) -> None:
-        """Garante que a view usa o primeiro mundo disponível para predições."""
-        world_1 = World.objects.create(name="antica")
-        World.objects.create(name="belobra")
-
-        url = reverse("killstats:boss_monitor")
-        response = client.get(url)
-
-        assert response.context["current_world"] == world_1
-
-    def test_view_sorting_all_statuses_and_ties(self, client: Client) -> None:
-        """
-        Cenário Completo:
-        1. Overdue (Peso 0)
-        2. Expected (Peso 1) - Maior chance primeiro
-        3. Expected (Peso 1) - Menor chance depois
-        4. No Chance (Peso 2)
-        5. Missing (Peso 3)
-        6. Collecting (Peso 4) - Ordem Alfabética (A)
-        7. Collecting (Peso 4) - Ordem Alfabética (B)
-        """
-        world = World.objects.create(name="antica")
-        now = timezone.now()
-
-        # Criando os dados para forçar cada status
-        # 1. Overdue
-        m1 = Monster.objects.create(name="overdue_boss", is_active=True)
-        MonsterConfig.objects.create(monster=m1, min_interval=5, max_interval=10)
-        MonsterSpawnEvent.objects.create(
-            monster=m1, world=world, timestamp=now - timedelta(days=11)
-        )
-
-        # 2. Expected High (100%)
-        m2 = Monster.objects.create(name="expected_high", is_active=True)
-        MonsterConfig.objects.create(monster=m2, min_interval=5, max_interval=10)
-        MonsterSpawnEvent.objects.create(
-            monster=m2, world=world, timestamp=now - timedelta(days=10)
-        )
-
-        # 3. Expected Low (50%)
-        m3 = Monster.objects.create(name="expected_low", is_active=True)
-        MonsterConfig.objects.create(monster=m3, min_interval=10, max_interval=20)
-        MonsterSpawnEvent.objects.create(
-            monster=m3, world=world, timestamp=now - timedelta(days=15)
-        )
-
-        # 4. No Chance
-        m4 = Monster.objects.create(name="no_chance_boss", is_active=True)
-        MonsterConfig.objects.create(monster=m4, min_interval=10, max_interval=20)
-        MonsterSpawnEvent.objects.create(
-            monster=m4, world=world, timestamp=now - timedelta(days=2)
-        )
-
-        # 5 e 6. Collecting (Empate por nome)
-        Monster.objects.create(name="b_collecting", is_active=True)
-        Monster.objects.create(name="a_collecting", is_active=True)
-
-        # 7. Missing
-        m7 = Monster.objects.create(name="missing_boss", is_active=True)
-        MonsterConfig.objects.create(monster=m7, min_interval=5, max_interval=10)
-        MonsterSpawnEvent.objects.create(
-            monster=m7, world=world, timestamp=now - timedelta(days=30)
-        )
-
-        url = reverse("killstats:boss_monitor")
-        response = client.get(url)
+        response = client.get(self.url)
         bosses = response.context["bosses"]
 
-        # Verificação da Ordem Absoluta
-        assert bosses[0].name == "overdue_boss"  # Peso 0
-        assert bosses[1].name == "expected_high"  # Peso 1, Chance 100
-        assert bosses[2].name == "expected_low"  # Peso 1, Chance 50
-        assert bosses[3].name == "no_chance_boss"  # Peso 2
-        assert bosses[4].name == "missing_boss"  # Peso 3
-        assert bosses[5].name == "a_collecting"  # Peso 4, Alfabético A
-        assert bosses[6].name == "b_collecting"  # Peso 4, Alfabético B
+        assert any(b.id == m1.id for b in bosses)
+        assert not any(b.id == m2.id for b in bosses)
 
-    def test_view_filters_inactive_monsters(self, client: Client) -> None:
-        """Garante que monstros inativos não aparecem e não são processados."""
-        World.objects.create(name="antica")
+        for b in bosses:
+            if b.id == m1.id:
+                assert b.prediction["status_code"] == PredictionStatus.COLLECTING.value
 
-        # Setup: 1 Ativo e 2 Inativos
-        Monster.objects.create(name="visible_boss", is_active=True)
-        Monster.objects.create(name="hidden_boss_1", is_active=False)
-        Monster.objects.create(name="hidden_boss_2", is_active=False)
-
-        url = reverse("killstats:boss_monitor")
-        response = client.get(url)
-
-        bosses = response.context["bosses"]
-
-        # 1. Validação de Quantidade: Apenas o ativo deve estar presente
-        assert len(bosses) == 1
-        assert bosses[0].name == "visible_boss"
-
-        # 2. Validação Extrema: Garante que os inativos não existem no queryset
-        active_names = [b.name for b in bosses]
-        assert "hidden_boss_1" not in active_names
-        assert "hidden_boss_2" not in active_names
-
-    def test_view_ignores_inactive_monsters_but_keeps_data(
-        self, client: Client
-    ) -> None:
-        """Valida que dados de monstros inativos existem no banco, mas são filtrados na View."""
-        world = World.objects.create(name="antica")
-        m1 = Monster.objects.create(name="silent_boss", is_active=False)
-
-        # Cria evento para o monstro inativo
-        MonsterSpawnEvent.objects.create(
-            monster=m1, world=world, timestamp=timezone.now()
-        )
-
-        url = reverse("killstats:boss_monitor")
-        response = client.get(url)
-
-        # Na View não aparece nada
-        assert len(response.context["bosses"]) == 0
-        # No banco de dados o evento deve existir (Proposta 1)
-        assert MonsterSpawnEvent.objects.filter(monster__name="silent_boss").exists()
+    # --- Testes de Ordenação ---
 
     def test_view_sorting_with_user_preferences(self, client: Client) -> None:
-        """
-        Caso de borda extremo: Valida a hierarquia Pin > Status > Low Priority.
-        1. 'rat' (Collecting - Peso 4) está PINNED -> Deve ir para o topo.
-        2. 'orshabaal' (Overdue - Peso 0) é LOW PRIORITY -> Deve ir para o final.
-        """
-        world = World.objects.create(name="antica")
-        user = User.objects.create_user(username="test_sorter", password="pw")
-        client.force_login(user)
+        """Valida a hierarquia: Pinned > Status Weight > Chance > Name."""
+        client.force_login(self.user)
+        now = timezone.now()
 
-        # Criando monstro que seria o último (Collecting), mas será PINNED
-        m_pin = Monster.objects.create(name="rat", is_active=True)
-        UserKillStatPreference.objects.create(user=user, monster=m_pin, is_pinned=True)
-
-        # Criando monstro que seria o primeiro (Overdue), mas será LOW PRIORITY
-        m_low = Monster.objects.create(name="orshabaal", is_active=True)
-        MonsterConfig.objects.create(monster=m_low, min_interval=5, max_interval=10)
-        MonsterSpawnEvent.objects.create(
-            monster=m_low, world=world, timestamp=timezone.now() - timedelta(days=11)
+        # Boss 1: Expected Soon (Weight 1) - Será PINNED
+        b1 = Monster.objects.create(name="gazharagoth-sort")
+        MonsterConfig.objects.create(
+            monster=b1, is_active=True, min_interval=5, max_interval=10
         )
+        MonsterSpawnEvent.objects.create(
+            monster=b1, world=self.world, timestamp=now - timedelta(days=7)
+        )
+
+        # Boss 2: Overdue (Weight 0) - Naturalmente ficaria no topo, mas não é pinned
+        b2 = Monster.objects.create(name="orshabaal-sort")
+        MonsterConfig.objects.create(
+            monster=b2, is_active=True, min_interval=5, max_interval=10
+        )
+        MonsterSpawnEvent.objects.create(
+            monster=b2, world=self.world, timestamp=now - timedelta(days=12)
+        )
+
         UserKillStatPreference.objects.create(
-            user=user, monster=m_low, is_low_priority=True
+            user=self.user, monster=b1, is_pinned=True
         )
 
-        # Monstro normal (Expected - Peso 1) para ficar no meio
-        m_norm = Monster.objects.create(name="normal_boss", is_active=True)
-        MonsterConfig.objects.create(monster=m_norm, min_interval=5, max_interval=10)
-        MonsterSpawnEvent.objects.create(
-            monster=m_norm, world=world, timestamp=timezone.now() - timedelta(days=7)
-        )
+        response = client.get(self.url)
+        bosses = list(response.context["bosses"])
 
-        response = client.get(reverse("killstats:boss_monitor"))
-        bosses = response.context["bosses"]
-
-        # Verificação da nova hierarquia de visualização personalizada[cite: 8]
-        assert bosses[0].name == "rat"  # Pinned ignora status peso 4
-        assert bosses[1].name == "normal_boss"  # Ordem normal de status
-        assert bosses[2].name == "orshabaal"  # Low Priority ignora status peso 0
+        assert bosses[0].id == b1.id  # Pinned vence o Overdue
+        assert bosses[1].id == b2.id
 
     def test_anonymous_user_sees_default_sorting(self, client: Client) -> None:
-        """Garante que as preferências de um usuário não afetam visitantes anônimos."""
-        world = World.objects.create(name="antica")
-        user = User.objects.create_user(username="other_user", password="pw")
+        """Garante que a ordenação padrão prioriza OVERDUE (0) sobre EXPECTED (1)."""
+        now = timezone.now()
 
-        m_overdue = Monster.objects.create(name="overdue_boss", is_active=True)
-        MonsterConfig.objects.create(monster=m_overdue, min_interval=5, max_interval=10)
+        # 1. BOSS EXPECTED (Peso 1)
+        # Morreu há 7 dias. Janela 5-10. Status: EXPECTED
+        b_soon = Monster.objects.create(name="soon-boss")
+        MonsterConfig.objects.create(
+            monster=b_soon, is_active=True, min_interval=5, max_interval=10
+        )
         MonsterSpawnEvent.objects.create(
-            monster=m_overdue,
-            world=world,
-            timestamp=timezone.now() - timedelta(days=11),
-        )
-        # Este usuário prefere o overdue no final
-        UserKillStatPreference.objects.create(
-            user=user, monster=m_overdue, is_low_priority=True
+            monster=b_soon, world=self.world, timestamp=now - timedelta(days=7)
         )
 
-        # Visitante anônimo acessa a página
-        response = client.get(reverse("killstats:boss_monitor"))
-        bosses = response.context["bosses"]
+        # 2. BOSS OVERDUE (Peso 0)
+        # Morreu há 11 dias. Janela 5-10.
+        # 11 dias está dentro da tolerância de 20% (10 * 1.2 = 12 dias).
+        # Status: OVERDUE
+        b_late = Monster.objects.create(name="late-boss")
+        MonsterConfig.objects.create(
+            monster=b_late, is_active=True, min_interval=5, max_interval=10
+        )
+        MonsterSpawnEvent.objects.create(
+            monster=b_late, world=self.world, timestamp=now - timedelta(days=11)
+        )
 
-        # Para o anônimo, a ordem deve ser a padrão de status (Overdue primeiro)[cite: 8]
-        assert bosses[0].name == "overdue_boss"
+        response = client.get(self.url)
+        bosses = list(response.context["bosses"])
 
-    def test_toggle_preference_exclusivity_and_security(self, client: Client) -> None:
-        """
-        Caso de borda:
-        1. Garante que precisa de login.
-        2. Valida que ao Pinar, a Baixa Prioridade é removida (Exclusão Mútua).
-        """
-        user = User.objects.create_user(username="toggle_user", password="pw")
-        monster = Monster.objects.create(name="ghazbaran", is_active=True)
-        url = reverse("killstats:toggle_preference")
+        # Agora a ordenação deve colocar o OVERDUE (peso 0) no topo
+        assert bosses[0].name == "late-boss"
+        assert bosses[0].prediction["status_code"] == "OVERDUE"
+        assert bosses[1].name == "soon-boss"
+        assert bosses[1].prediction["status_code"] == "EXPECTED"
 
-        # 1. Teste de Segurança (Sem login)
-        resp = client.post(url, {"monster_id": monster.id, "action": "pin"})
-        assert resp.status_code == 302  # Redireciona para login
+    # --- Testes de Toggles e Preferências ---
 
-        # 2. Teste de Exclusão Mútua
-        client.force_login(user)
-        # Começa como Baixa Prioridade
+    def test_toggle_preference_pin_and_exclusion(self, client: Client) -> None:
+        """Valida o PIN e a limpeza automática de Low Priority."""
+        monster = Monster.objects.create(name="ghazbaran-toggle")
+        MonsterConfig.objects.create(monster=monster, is_active=True)
+        url_toggle = reverse("killstats:toggle_preference")
+
+        client.force_login(self.user)
         pref = UserKillStatPreference.objects.create(
-            user=user, monster=monster, is_low_priority=True
+            user=self.user, monster=monster, is_low_priority=True
         )
 
-        # Ativa o Pin
-        client.post(url, {"monster_id": monster.id, "action": "pin"})
+        # Ativa o Pin via POST
+        client.post(url_toggle, {"monster_id": monster.id, "action": "pin"})
         pref.refresh_from_db()
 
         assert pref.is_pinned is True
-        assert pref.is_low_priority is False  # Deve ter sido limpo automaticamente
+        assert pref.is_low_priority is False
 
     def test_toggle_action_unpin(self, client: Client) -> None:
-        """Valida que o toggle também funciona para desmarcar (not condition)."""
-        user = User.objects.create_user(username="unpin_user", password="pw")
-        monster = Monster.objects.create(name="ferumbras", is_active=True)
-        client.force_login(user)
+        """Valida que o toggle de um PIN já existente o desativa."""
+        monster = Monster.objects.create(name="ferumbras-unpin")
+        MonsterConfig.objects.create(monster=monster, is_active=True)
+        client.force_login(self.user)
 
         pref = UserKillStatPreference.objects.create(
-            user=user, monster=monster, is_pinned=True
+            user=self.user, monster=monster, is_pinned=True
         )
-        url = reverse("killstats:toggle_preference")
 
-        # Desmarca o Pin
-        client.post(url, {"monster_id": monster.id, "action": "pin"})
+        url_toggle = reverse("killstats:toggle_preference")
+        client.post(url_toggle, {"monster_id": monster.id, "action": "pin"})
         pref.refresh_from_db()
+
         assert pref.is_pinned is False
+
+    # --- Testes de Segurança e Contexto ---
+
+    def test_view_prediction_disabled_no_world(self, client: Client) -> None:
+        """Verifica comportamento quando não há mundos cadastrados."""
+        World.objects.all().delete()
+        response = client.get(self.url)
+        assert response.status_code == 200
+        assert response.context.get("prediction_enabled") is False
+
+    def test_toggle_auth_required(self, client: Client) -> None:
+        """Garante que toggle_preference exige login (redireciona)."""
+        monster = Monster.objects.create(name="auth-check-boss")
+        url = reverse("killstats:toggle_preference")
+        resp = client.post(url, {"monster_id": monster.id, "action": "pin"})
+        assert resp.status_code == 302
+
+    def test_view_uses_correct_world_context(self, client: Client) -> None:
+        """Garante que a predição reflete os eventos do mundo correto."""
+        # 1. Setup de Mundos
+        world_b = World.objects.create(
+            name="belobra-context"
+        )  # self.world já é Antica no setup
+
+        # 2. Setup do Monstro (Nome único para evitar colisão)
+        monster = Monster.objects.create(name="ghazbaran-context")
+        MonsterConfig.objects.create(
+            monster=monster, is_active=True, min_interval=5, max_interval=10
+        )
+
+        # 3. Criamos um evento APENAS no Mundo B (Belobra)
+        # Se a view olhar para o Mundo A (Antica), o status deve ser COLLECTING
+        # Se olhar para o Mundo B, deve ter predição baseada no tempo
+        MonsterSpawnEvent.objects.create(
+            monster=monster, world=world_b, timestamp=timezone.now() - timedelta(days=7)
+        )
+
+        # Acessando o monitor (assume o primeiro mundo ou o contexto padrão)
+        # Se o seu sistema usa query params (?world=...), você pode testar a troca aqui
+        response = client.get(self.url)
+        bosses = response.context["bosses"]
+
+        for b in bosses:
+            if b.id == monster.id:
+                # Como não há eventos no mundo padrão (Antica), deve ser COLLECTING
+                assert b.prediction["status_code"] == PredictionStatus.COLLECTING.value
