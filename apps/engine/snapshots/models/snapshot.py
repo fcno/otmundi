@@ -27,4 +27,6 @@ class Snapshot(models.Model):
         ]
 
     def __str__(self) -> str:
-        return f"{self.world.name} - {self.captured_at}"
+        return _("{world_name} - {captured_at}").format(
+            world_name=self.world.name, captured_at=self.captured_at
+        )

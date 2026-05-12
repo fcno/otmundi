@@ -31,4 +31,6 @@ class KillStat(models.Model):
         ]
 
     def __str__(self) -> str:
-        return f"{self.monster.name} ({self.snapshot.captured_at})"
+        return _("{monster_name} ({captured_at})").format(
+            monster_name=self.monster.name, captured_at=self.snapshot.captured_at
+        )
