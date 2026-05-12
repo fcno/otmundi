@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 import pytest
 from django.utils import timezone
 
-from apps.engine.ingestion.services.monster_event_ingest_service import (
+from apps.engine.killstats.ingestion.services.monster_event_ingest_service import (
     MonsterEventIngestService,
 )
 from apps.engine.killstats.models.monster_spawn_event import MonsterSpawnEvent

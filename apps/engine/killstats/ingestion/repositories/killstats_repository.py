@@ -1,7 +1,7 @@
 from django.db import transaction
 
-from apps.engine.ingestion.dto import WorldKillStatsDTO
-from apps.engine.ingestion.services.monster_event_ingest_service import (
+from apps.engine.killstats.ingestion.dto import WorldKillStatsDTO
+from apps.engine.killstats.ingestion.services.monster_event_ingest_service import (
     MonsterEventIngestService,
 )
 from apps.engine.killstats.models.killstat import KillStat

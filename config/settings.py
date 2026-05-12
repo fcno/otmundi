@@ -43,12 +43,10 @@ LOCAL_APPS = [
     "apps.core",
     # Identity
     "apps.identity.users",
-    "apps.identity.preferences",
     # Game Data
     "apps.game_data.monsters",
     "apps.game_data.worlds",
     # Engine
-    "apps.engine.ingestion",
     "apps.engine.killstats",
     "apps.engine.snapshots",
     "theme",

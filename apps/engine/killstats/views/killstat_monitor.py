@@ -45,12 +45,13 @@ class KillstatMonitorView(BaseView):
         # 2. Mapeia preferências do usuário se estiver autenticado
         user_prefs = {}
         if user.is_authenticated:
-            from apps.identity.preferences.models.user_monster_preference import (
-                UserMonsterPreference,
+            from apps.engine.killstats.models.user_preference import (
+                UserKillStatPreference,
             )
 
             user_prefs = {
-                p.monster_id: p for p in UserMonsterPreference.objects.filter(user=user)
+                p.monster_id: p
+                for p in UserKillStatPreference.objects.filter(user=user)
             }
 
         # 3. Calcula a predição para cada boss injetando dados de predição e preferências em cada objeto de boss

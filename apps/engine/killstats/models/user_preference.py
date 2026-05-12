@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from apps.game_data.monsters.models.monster import Monster
 
 
-class UserMonsterPreference(models.Model):
+class UserKillStatPreference(models.Model):
     """
     Armazena as preferências individuais de visualização de cada usuário.
     """
@@ -30,6 +30,7 @@ class UserMonsterPreference(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        app_label = "killstats"
         verbose_name = _("user monster preference")
         verbose_name_plural = _("user monster preferences")
         unique_together = ("user", "monster")

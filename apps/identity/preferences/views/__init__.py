@@ -1,1 +1,0 @@
-from .preference_actions import toggle_monster_preference as toggle_monster_preference

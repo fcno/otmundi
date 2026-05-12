@@ -3,9 +3,15 @@ from typing import Any
 import pytest
 
 from apps.core.validators.base import ValidationError
-from apps.engine.ingestion.providers.killstats_scraper import KillStatsScraperProvider
-from apps.engine.ingestion.repositories.killstats_repository import KillStatsRepository
-from apps.engine.ingestion.services.ingest_killstats import KillStatsIngestService
+from apps.engine.killstats.ingestion.providers.killstats_scraper import (
+    KillStatsScraperProvider,
+)
+from apps.engine.killstats.ingestion.repositories.killstats_repository import (
+    KillStatsRepository,
+)
+from apps.engine.killstats.ingestion.services.ingest_killstats import (
+    KillStatsIngestService,
+)
 from apps.engine.killstats.models.killstat import KillStat
 
 

@@ -11,17 +11,19 @@ from apps.core.validators.integers import validate_integer
 from apps.core.validators.required import validate_required
 from apps.core.validators.strings import validate_string
 from apps.core.validators.unique import validate_unique
-from apps.engine.ingestion.dto import (
+from apps.engine.killstats.ingestion.dto import (
     KillStatsMetricDTO,
     MonsterStatsDTO,
     WorldKillStatsDTO,
 )
-from apps.engine.ingestion.providers.killstats_scraper import (
+from apps.engine.killstats.ingestion.providers.killstats_scraper import (
     KillStatsScraperProvider,
     ProviderOutput,
     RawProviderInput,
 )
-from apps.engine.ingestion.repositories.killstats_repository import KillStatsRepository
+from apps.engine.killstats.ingestion.repositories.killstats_repository import (
+    KillStatsRepository,
+)
 from apps.engine.snapshots.models.snapshot import Snapshot
 
 

@@ -4,9 +4,15 @@ from typing import Any
 from django.utils.translation import gettext as _
 
 from apps.core.management.base_batch import BaseBatchIngestCommand
-from apps.engine.ingestion.providers.killstats_scraper import KillStatsScraperProvider
-from apps.engine.ingestion.repositories.killstats_repository import KillStatsRepository
-from apps.engine.ingestion.services.ingest_killstats import KillStatsIngestService
+from apps.engine.killstats.ingestion.providers.killstats_scraper import (
+    KillStatsScraperProvider,
+)
+from apps.engine.killstats.ingestion.repositories.killstats_repository import (
+    KillStatsRepository,
+)
+from apps.engine.killstats.ingestion.services.ingest_killstats import (
+    KillStatsIngestService,
+)
 
 
 class Command(BaseBatchIngestCommand):

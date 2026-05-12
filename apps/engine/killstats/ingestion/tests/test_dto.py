@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from apps.engine.ingestion.dto import (
+from apps.engine.killstats.ingestion.dto import (
     KillStatsMetricDTO,
     MonsterStatsDTO,
     WorldKillStatsDTO,

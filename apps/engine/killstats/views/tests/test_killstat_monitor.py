@@ -8,12 +8,12 @@ from django.utils import timezone
 
 from apps.engine.killstats.models.monster_config import MonsterConfig
 from apps.engine.killstats.models.monster_spawn_event import MonsterSpawnEvent
+from apps.engine.killstats.models.user_preference import (
+    UserKillStatPreference,
+)
 from apps.engine.killstats.services.prediction_service import PredictionStatus
 from apps.game_data.monsters.models import Monster
 from apps.game_data.worlds.models.world import World
-from apps.identity.preferences.models.user_monster_preference import (
-    UserMonsterPreference,
-)
 
 User = get_user_model()
 
@@ -190,7 +190,7 @@ class TestBossMonitorView:
 
         # Criando monstro que seria o último (Collecting), mas será PINNED
         m_pin = Monster.objects.create(name="rat", is_active=True)
-        UserMonsterPreference.objects.create(user=user, monster=m_pin, is_pinned=True)
+        UserKillStatPreference.objects.create(user=user, monster=m_pin, is_pinned=True)
 
         # Criando monstro que seria o primeiro (Overdue), mas será LOW PRIORITY
         m_low = Monster.objects.create(name="orshabaal", is_active=True)
@@ -198,7 +198,7 @@ class TestBossMonitorView:
         MonsterSpawnEvent.objects.create(
             monster=m_low, world=world, timestamp=timezone.now() - timedelta(days=11)
         )
-        UserMonsterPreference.objects.create(
+        UserKillStatPreference.objects.create(
             user=user, monster=m_low, is_low_priority=True
         )
 
@@ -230,7 +230,7 @@ class TestBossMonitorView:
             timestamp=timezone.now() - timedelta(days=11),
         )
         # Este usuário prefere o overdue no final
-        UserMonsterPreference.objects.create(
+        UserKillStatPreference.objects.create(
             user=user, monster=m_overdue, is_low_priority=True
         )
 
@@ -249,7 +249,7 @@ class TestBossMonitorView:
         """
         user = User.objects.create_user(username="toggle_user", password="pw")
         monster = Monster.objects.create(name="ghazbaran", is_active=True)
-        url = reverse("preferences:toggle_preference")
+        url = reverse("killstats:toggle_preference")
 
         # 1. Teste de Segurança (Sem login)
         resp = client.post(url, {"monster_id": monster.id, "action": "pin"})
@@ -258,7 +258,7 @@ class TestBossMonitorView:
         # 2. Teste de Exclusão Mútua
         client.force_login(user)
         # Começa como Baixa Prioridade
-        pref = UserMonsterPreference.objects.create(
+        pref = UserKillStatPreference.objects.create(
             user=user, monster=monster, is_low_priority=True
         )
 
@@ -275,10 +275,10 @@ class TestBossMonitorView:
         monster = Monster.objects.create(name="ferumbras", is_active=True)
         client.force_login(user)
 
-        pref = UserMonsterPreference.objects.create(
+        pref = UserKillStatPreference.objects.create(
             user=user, monster=monster, is_pinned=True
         )
-        url = reverse("preferences:toggle_preference")
+        url = reverse("killstats:toggle_preference")
 
         # Desmarca o Pin
         client.post(url, {"monster_id": monster.id, "action": "pin"})

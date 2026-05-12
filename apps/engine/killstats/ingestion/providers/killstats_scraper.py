@@ -1,6 +1,6 @@
 from typing import TypedDict
 
-from .base import BaseProvider
+from .....core.providers.base_provider import BaseProvider
 
 # ===== RAW INPUT (externo) =====
 

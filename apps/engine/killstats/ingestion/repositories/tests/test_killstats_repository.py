@@ -3,12 +3,14 @@ from datetime import UTC, datetime
 import pytest
 from django.db import IntegrityError, transaction
 
-from apps.engine.ingestion.dto import (
+from apps.engine.killstats.ingestion.dto import (
     KillStatsMetricDTO,
     MonsterStatsDTO,
     WorldKillStatsDTO,
 )
-from apps.engine.ingestion.repositories.killstats_repository import KillStatsRepository
+from apps.engine.killstats.ingestion.repositories.killstats_repository import (
+    KillStatsRepository,
+)
 from apps.engine.killstats.models.killstat import KillStat
 from apps.engine.killstats.models.monster_spawn_event import MonsterSpawnEvent
 from apps.engine.snapshots.models.snapshot import Snapshot

@@ -1,4 +1,4 @@
-from apps.engine.ingestion.providers.killstats_scraper import (
+from apps.engine.killstats.ingestion.providers.killstats_scraper import (
     KillStatsScraperProvider,
     RawProviderInput,
 )

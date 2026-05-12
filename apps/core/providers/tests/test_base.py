@@ -1,6 +1,6 @@
 # apps/ingestion/providers/tests/test_base.py
 
-from apps.engine.ingestion.providers.base import BaseProvider
+from apps.core.providers.base_provider import BaseProvider
 
 
 class DummyProvider(BaseProvider[dict[str, object], int]):
