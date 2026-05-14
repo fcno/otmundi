@@ -1,0 +1,88 @@
+{% load i18n %}
+
+<form hx-post="{% url 'killstats:report_spawn' %}" 
+      hx-target="#spawn-form-container" 
+      hx-swap="innerHTML"
+      class="space-y-6">
+    {% csrf_token %}
+    
+    {# Mensagem de Sucesso #}
+    {% if success_message %}
+        <div class="alert alert-success shadow-sm mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <span>{{ success_message }}</span>
+        </div>
+    {% endif %}
+
+    {# Erros Gerais (ex: UniqueConstraint) #}
+    {% if form.non_field_errors %}
+        <div class="alert alert-error shadow-sm mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <div class="flex flex-col">
+                {% for error in form.non_field_errors %}
+                    <span>{{ error }}</span>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    {# Campo: Monster #}
+    <div class="form-control w-full">
+        <label class="label">
+            <span class="label-text font-semibold">{{ form.monster.label }}</span>
+        </label>
+        {{ form.monster }}
+        {% if form.monster.errors %}
+            <label class="label">
+                <span class="label-text-alt text-error">{{ form.monster.errors.0 }}</span>
+            </label>
+        {% endif %}
+    </div>
+
+    {# Campo: World #}
+    <div class="form-control w-full">
+        <label class="label">
+            <span class="label-text font-semibold">{{ form.world.label }}</span>
+        </label>
+        {{ form.world }}
+        {% if form.world.errors %}
+            <label class="label">
+                <span class="label-text-alt text-error">{{ form.world.errors.0 }}</span>
+            </label>
+        {% endif %}
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {# Campo: Timestamp #}
+        <div class="form-control w-full">
+            <label class="label">
+                <span class="label-text font-semibold">{{ form.timestamp.label }}</span>
+            </label>
+            {{ form.timestamp }}
+            {% if form.timestamp.errors %}
+                <label class="label">
+                    <span class="label-text-alt text-error">{{ form.timestamp.errors.0 }}</span>
+                </label>
+            {% endif %}
+        </div>
+
+        {# Campo: Is Puff #}
+        <div class="form-control">
+            <label class="label cursor-pointer justify-start gap-4 h-full pt-8">
+                {{ form.is_puff }}
+                <span class="label-text font-semibold">{{ form.is_puff.label }}</span>
+            </label>
+            {% if form.is_puff.errors %}
+                <label class="label">
+                    <span class="label-text-alt text-error">{{ form.is_puff.errors.0 }}</span>
+                </label>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card-actions justify-end mt-4">
+        <button type="submit" class="btn btn-primary w-full md:w-auto">
+            {% translate "Submit Report" %}
+        </button>
+    </div>
+</form>
