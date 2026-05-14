@@ -3,8 +3,8 @@ from typing import Any
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from .base import ValidationError
-from .types import Validator
+from apps.core.validators.base import ValidationError
+from apps.core.validators.types import Validator
 
 
 def validate_unique[T: models.Model](*, model_class: type[T], field: str) -> Validator:

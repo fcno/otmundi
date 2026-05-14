@@ -2,7 +2,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import path
 
 # Importação ajustada para o novo arquivo user_auth
-from .views.user_auth import register_view, user_delete_view
+from apps.identity.users.views.user_auth import register_view, user_delete_view
 
 app_name = "users"
 

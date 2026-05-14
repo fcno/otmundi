@@ -3,8 +3,8 @@ from django.utils.dateparse import parse_datetime
 from django.utils.timezone import is_naive
 from django.utils.translation import gettext_lazy as _
 
-from .base import ValidationError
-from .types import Validator
+from apps.core.validators.base import ValidationError
+from apps.core.validators.types import Validator
 
 
 def validate_datetime(*, field: str) -> Validator:

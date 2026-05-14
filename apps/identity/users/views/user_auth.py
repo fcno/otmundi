@@ -5,7 +5,7 @@ from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 from django_ratelimit.decorators import ratelimit
 
-from ..forms.user_forms import CustomUserCreationForm
+from apps.identity.users.forms.user_forms import CustomUserCreationForm
 
 
 @ratelimit(key="ip", rate="5/m", block=True)  # type: ignore

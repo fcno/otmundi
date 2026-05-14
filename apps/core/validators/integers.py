@@ -1,8 +1,8 @@
 # apps/core/validators/integers.py
 from django.utils.translation import gettext_lazy as _
 
-from .base import ValidationError
-from .types import Validator
+from apps.core.validators.base import ValidationError
+from apps.core.validators.types import Validator
 
 
 def validate_integer(*, field: str) -> Validator:

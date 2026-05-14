@@ -3,9 +3,8 @@ from django.http import HttpRequest, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
 
+from apps.engine.killstats.models.user_preference import UserKillStatPreference
 from apps.game_data.monsters.models import Monster
-
-from ..models.user_preference import UserKillStatPreference
 
 
 @login_required

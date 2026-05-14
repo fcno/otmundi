@@ -1,9 +1,11 @@
 from django.urls import path
 
-from .views.boss_curator import BossCuratorView
-from .views.killstat_monitor import KillstatMonitorView
-from .views.monster_spawn_event_report import MonsterSpawnEventCreateView
-from .views.preference_actions import toggle_monster_preference
+from apps.engine.killstats.views.boss_curator import BossCuratorView
+from apps.engine.killstats.views.killstat_monitor import KillstatMonitorView
+from apps.engine.killstats.views.monster_spawn_event_report import (
+    MonsterSpawnEventCreateView,
+)
+from apps.engine.killstats.views.preference_actions import toggle_monster_preference
 
 app_name = "killstats"
 

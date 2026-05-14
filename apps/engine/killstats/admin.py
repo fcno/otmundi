@@ -3,10 +3,9 @@ from typing import TYPE_CHECKING, Any
 from django.contrib import admin
 from django.http import HttpRequest
 
+from apps.engine.killstats.models.monster_config import MonsterConfig
+from apps.engine.killstats.models.monster_spawn_event import MonsterSpawnEvent
 from apps.identity.users.models.user import User
-
-from .models.monster_config import MonsterConfig as MonsterConfig
-from .models.monster_spawn_event import MonsterSpawnEvent
 
 if TYPE_CHECKING:
     # Isso só existe durante a análise do Mypy

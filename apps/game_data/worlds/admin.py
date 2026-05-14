@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from django.contrib import admin
 
-from .models.world import World
+from apps.game_data.worlds.models.world import World
 
 if TYPE_CHECKING:
     # Isso só existe durante a análise do Mypy

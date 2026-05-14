@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from django.contrib import admin
 
-from .models.monster import Monster
+from apps.game_data.monsters.models.monster import Monster
 
 if TYPE_CHECKING:
     # Isso só existe durante a análise do Mypy
