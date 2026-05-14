@@ -11,15 +11,15 @@ User = get_user_model()
 
 
 @pytest.mark.django_db
-class TestBossCuratorView:
+class TestMonsterCuratorView:
     @pytest.fixture(autouse=True)
     def setup(self, client: Client) -> None:
         self.client = client
-        self.user = User.objects.create_user(username="curator_boss", password="123")
+        self.user = User.objects.create_user(username="curator_monster", password="123")
         self.monster = Monster.objects.create(name="ghazbaran")
         # Config inicial ativa
         self.config = MonsterConfig.objects.create(monster=self.monster, is_active=True)
-        self.url = reverse("killstats:boss_curator")
+        self.url = reverse("killstats:monster_curator")
 
     def test_curator_access_denied_without_permission(self) -> None:
         """403 para usuários sem a permissão killstats.change_monsterconfig."""

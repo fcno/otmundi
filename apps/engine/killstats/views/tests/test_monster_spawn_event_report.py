@@ -55,7 +55,7 @@ class TestMonsterSpawnEventCreateView:
         assert "Event registered successfully!" in response.content.decode()
 
     def test_unique_constraint_violation_per_day(self) -> None:
-        """Garante que dois eventos para o mesmo boss/dia/mundo falham (UniqueConstraint)."""
+        """Garante que dois eventos para o mesmo monstro/dia/mundo falham (UniqueConstraint)."""
         perm = Permission.objects.get(codename="add_monsterspawnevent")
         self.user.user_permissions.add(perm)
         self.client.force_login(self.user)

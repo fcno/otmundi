@@ -30,7 +30,7 @@ class Migration(migrations.Migration):
                 (
                     "timestamp",
                     models.DateTimeField(
-                        help_text="The exact moment the boss died or puffed.",
+                        help_text="The exact moment the monster died or puffed.",
                         verbose_name="event timestamp",
                     ),
                 ),
@@ -38,7 +38,7 @@ class Migration(migrations.Migration):
                     "is_puff",
                     models.BooleanField(
                         default=False,
-                        help_text="True if the boss despawned without being killed.",
+                        help_text="True if the monster despawned without being killed.",
                         verbose_name="is puff",
                     ),
                 ),
@@ -155,7 +155,7 @@ class Migration(migrations.Migration):
                     "is_active",
                     models.BooleanField(
                         default=False,
-                        help_text="Define se o monstro será exibido no monitor de bosses.",
+                        help_text="Defines whether the monster will be displayed on the monster monitor.",
                     ),
                 ),
                 (

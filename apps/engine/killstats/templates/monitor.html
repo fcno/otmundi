@@ -5,7 +5,7 @@
 <div class="container mx-auto p-4">
     <header class="flex justify-between items-center mb-8">
         <div>
-            <h1 class="text-3xl font-bold">Monitor de Bosses</h1>
+            <h1 class="text-3xl font-bold">Monitor de Monstros</h1>
             <p class="text-base-content/60">Mundo: <span class="badge badge-secondary">{{ current_world.name }}</span></p>
         </div>
     </header>
@@ -22,7 +22,7 @@
             <table class="table w-full">
                 <thead>
                     <tr>
-                        <th>Boss</th>
+                        <th>Monstro</th>
                         <th>Status</th>
                         <th>Probabilidade</th>
                         <th>Janela (Dias)</th>
@@ -30,40 +30,40 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for boss in bosses %}
+                    {% for monster in monsters %}
                     <tr class="hover">
-                        <td class="font-bold">{{ boss.name|title }}</td>
+                        <td class="font-bold">{{ monster.name|title }}</td>
                         <td>
                             {# Usando o status_code que definimos no PredictionService #}
-                            {% if boss.prediction.status_code == 'EXPECTED' %}
-                                <span class="badge badge-success">{{ boss.prediction.status }}</span>
-                            {% elif boss.prediction.status_code == 'OVERDUE' %}
-                                <span class="badge badge-error animate-pulse">{{ boss.prediction.status }}</span>
-                            {% elif boss.prediction.status_code == 'NO_CHANCE' %}
-                                <span class="badge badge-ghost opacity-50">{{ boss.prediction.status }}</span>
+                            {% if monster.prediction.status_code == 'EXPECTED' %}
+                                <span class="badge badge-success">{{ monster.prediction.status }}</span>
+                            {% elif monster.prediction.status_code == 'OVERDUE' %}
+                                <span class="badge badge-error animate-pulse">{{ monster.prediction.status }}</span>
+                            {% elif monster.prediction.status_code == 'NO_CHANCE' %}
+                                <span class="badge badge-ghost opacity-50">{{ monster.prediction.status }}</span>
                             {% else %}
-                                <span class="badge badge-info">{{ boss.prediction.status }}</span>
+                                <span class="badge badge-info">{{ monster.prediction.status }}</span>
                             {% endif %}
                         </td>
                         <td>
                             <div class="flex items-center gap-2">
-                                <progress class="progress progress-primary w-20" value="{{ boss.prediction.chance_percentage }}" max="100"></progress>
-                                <span>{{ boss.prediction.chance_percentage }}%</span>
+                                <progress class="progress progress-primary w-20" value="{{ monster.prediction.chance_percentage }}" max="100"></progress>
+                                <span>{{ monster.prediction.chance_percentage }}%</span>
                             </div>
                         </td>
                         <td>
-                            {% if boss.prediction.min_interval and boss.prediction.max_interval %}
+                            {% if monster.prediction.min_interval and monster.prediction.max_interval %}
                                 <span class="text-sm">
-                                    {{ boss.prediction.min_interval }} - {{ boss.prediction.max_interval }}
+                                    {{ monster.prediction.min_interval }} - {{ monster.prediction.max_interval }}
                                 </span>
                             {% else %}
                                 <span class="text-base-content/30 italic">? - ?</span>
                             {% endif %}
                         </td>
                         <td>
-                            {% if boss.prediction.last_spawn %}
-                                {{ boss.prediction.last_spawn|date:"d/m/Y H:i" }}
-                                <span class="text-xs block text-base-content/50">({{ boss.prediction.days_since_last }} dias atrás)</span>
+                            {% if monster.prediction.last_spawn %}
+                                {{ monster.prediction.last_spawn|date:"d/m/Y H:i" }}
+                                <span class="text-xs block text-base-content/50">({{ monster.prediction.days_since_last }} dias atrás)</span>
                             {% else %}
                                 <span class="italic text-base-content/40">Sem registro</span>
                             {% endif %}

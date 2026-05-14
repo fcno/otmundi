@@ -24,12 +24,13 @@ class MonsterSpawnEvent(models.Model):
         verbose_name=_("monster"),
     )
     timestamp = models.DateTimeField(
-        _("event timestamp"), help_text=_("The exact moment the boss died or puffed.")
+        _("event timestamp"),
+        help_text=_("The exact moment the monster died or puffed."),
     )
     is_puff = models.BooleanField(
         _("is puff"),
         default=False,
-        help_text=_("True if the boss despawned without being killed."),
+        help_text=_("True if the monster despawned without being killed."),
     )
     reported_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,

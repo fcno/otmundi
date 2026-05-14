@@ -37,13 +37,13 @@ class TestPredictionService:
         )
 
     def test_status_collecting_data_no_event(self) -> None:
-        """Caso o boss nunca tenha sido visto no mundo."""
+        """Caso o monstro nunca tenha sido visto no mundo."""
         result = PredictionService.get_prediction(self.monster, self.world)
         assert result["status_code"] == PredictionStatus.COLLECTING.value
         assert result["chance_percentage"] == 0.0
 
     def test_status_no_chance(self) -> None:
-        """Boss morreu há 5 dias, janela mínima é 10."""
+        """Monstro morreu há 5 dias, janela mínima é 10."""
         self._create_event(days_ago=5)
         result = PredictionService.get_prediction(self.monster, self.world)
         assert result["status_code"] == PredictionStatus.NO_CHANCE.value

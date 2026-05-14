@@ -36,7 +36,9 @@ class MonsterConfig(models.Model):
     )
     is_active = models.BooleanField(
         default=False,
-        help_text=_("Define se o monstro será exibido no monitor de bosses."),
+        help_text=_(
+            "Defines whether the monster will be displayed on the monster monitor."
+        ),
     )
 
     # Campos de Auditoria

@@ -17,13 +17,13 @@ User = get_user_model()
 
 
 @pytest.mark.django_db
-class TestBossMonitorView:
+class TestMonsterMonitorView:
 
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
         """Setup básico para garantir que o ambiente tenha um mundo e URL padrão."""
         self.world = World.objects.create(name="antica-monitor")
-        self.url = reverse("killstats:boss_monitor")
+        self.url = reverse("killstats:monster_monitor")
         self.user = User.objects.create_user(username="monitor_user", password="pw")
 
     # --- Testes de Estado e Listagem ---
@@ -32,7 +32,7 @@ class TestBossMonitorView:
         """Garante que a view renderiza sem erros mesmo se o banco estiver vazio."""
         response = client.get(self.url)
         assert response.status_code == 200
-        assert len(response.context["bosses"]) == 0
+        assert len(response.context["monsters"]) == 0
 
     def test_view_logic_and_prediction_status(self, client: Client) -> None:
         """Valida filtragem básica e status inicial COLLECTING."""
@@ -44,12 +44,12 @@ class TestBossMonitorView:
         MonsterConfig.objects.create(monster=m2, is_active=False)
 
         response = client.get(self.url)
-        bosses = response.context["bosses"]
+        monsters = response.context["monsters"]
 
-        assert any(b.id == m1.id for b in bosses)
-        assert not any(b.id == m2.id for b in bosses)
+        assert any(b.id == m1.id for b in monsters)
+        assert not any(b.id == m2.id for b in monsters)
 
-        for b in bosses:
+        for b in monsters:
             if b.id == m1.id:
                 assert b.prediction["status_code"] == PredictionStatus.COLLECTING.value
 
@@ -60,7 +60,7 @@ class TestBossMonitorView:
         client.force_login(self.user)
         now = timezone.now()
 
-        # Boss 1: Expected Soon (Weight 1) - Será PINNED
+        # Monster 1: Expected Soon (Weight 1) - Será PINNED
         b1 = Monster.objects.create(name="gazharagoth-sort")
         MonsterConfig.objects.create(
             monster=b1, is_active=True, min_interval=5, max_interval=10
@@ -69,7 +69,7 @@ class TestBossMonitorView:
             monster=b1, world=self.world, timestamp=now - timedelta(days=7)
         )
 
-        # Boss 2: Overdue (Weight 0) - Naturalmente ficaria no topo, mas não é pinned
+        # Monster 2: Overdue (Weight 0) - Naturalmente ficaria no topo, mas não é pinned
         b2 = Monster.objects.create(name="orshabaal-sort")
         MonsterConfig.objects.create(
             monster=b2, is_active=True, min_interval=5, max_interval=10
@@ -83,18 +83,18 @@ class TestBossMonitorView:
         )
 
         response = client.get(self.url)
-        bosses = list(response.context["bosses"])
+        monsters = list(response.context["monsters"])
 
-        assert bosses[0].id == b1.id  # Pinned vence o Overdue
-        assert bosses[1].id == b2.id
+        assert monsters[0].id == b1.id  # Pinned vence o Overdue
+        assert monsters[1].id == b2.id
 
     def test_anonymous_user_sees_default_sorting(self, client: Client) -> None:
         """Garante que a ordenação padrão prioriza OVERDUE (0) sobre EXPECTED (1)."""
         now = timezone.now()
 
-        # 1. BOSS EXPECTED (Peso 1)
+        # 1. MONSTER EXPECTED (Peso 1)
         # Morreu há 7 dias. Janela 5-10. Status: EXPECTED
-        b_soon = Monster.objects.create(name="soon-boss")
+        b_soon = Monster.objects.create(name="soon-monster")
         MonsterConfig.objects.create(
             monster=b_soon, is_active=True, min_interval=5, max_interval=10
         )
@@ -102,11 +102,11 @@ class TestBossMonitorView:
             monster=b_soon, world=self.world, timestamp=now - timedelta(days=7)
         )
 
-        # 2. BOSS OVERDUE (Peso 0)
+        # 2. MONSTER OVERDUE (Peso 0)
         # Morreu há 11 dias. Janela 5-10.
         # 11 dias está dentro da tolerância de 20% (10 * 1.2 = 12 dias).
         # Status: OVERDUE
-        b_late = Monster.objects.create(name="late-boss")
+        b_late = Monster.objects.create(name="late-monster")
         MonsterConfig.objects.create(
             monster=b_late, is_active=True, min_interval=5, max_interval=10
         )
@@ -115,13 +115,13 @@ class TestBossMonitorView:
         )
 
         response = client.get(self.url)
-        bosses = list(response.context["bosses"])
+        monsters = list(response.context["monsters"])
 
         # Agora a ordenação deve colocar o OVERDUE (peso 0) no topo
-        assert bosses[0].name == "late-boss"
-        assert bosses[0].prediction["status_code"] == "OVERDUE"
-        assert bosses[1].name == "soon-boss"
-        assert bosses[1].prediction["status_code"] == "EXPECTED"
+        assert monsters[0].name == "late-monster"
+        assert monsters[0].prediction["status_code"] == "OVERDUE"
+        assert monsters[1].name == "soon-monster"
+        assert monsters[1].prediction["status_code"] == "EXPECTED"
 
     # --- Testes de Toggles e Preferências ---
 
@@ -170,7 +170,7 @@ class TestBossMonitorView:
 
     def test_toggle_auth_required(self, client: Client) -> None:
         """Garante que toggle_preference exige login (redireciona)."""
-        monster = Monster.objects.create(name="auth-check-boss")
+        monster = Monster.objects.create(name="auth-check-monster")
         url = reverse("killstats:toggle_preference")
         resp = client.post(url, {"monster_id": monster.id, "action": "pin"})
         assert resp.status_code == 302
@@ -198,9 +198,9 @@ class TestBossMonitorView:
         # Acessando o monitor (assume o primeiro mundo ou o contexto padrão)
         # Se o seu sistema usa query params (?world=...), você pode testar a troca aqui
         response = client.get(self.url)
-        bosses = response.context["bosses"]
+        monsters = response.context["monsters"]
 
-        for b in bosses:
+        for b in monsters:
             if b.id == monster.id:
                 # Como não há eventos no mundo padrão (Antica), deve ser COLLECTING
                 assert b.prediction["status_code"] == PredictionStatus.COLLECTING.value

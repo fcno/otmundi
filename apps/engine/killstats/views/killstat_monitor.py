@@ -21,7 +21,7 @@ else:
 class KillstatMonitorView(BaseView):
     model = Monster
     template_name = "monitor.html"
-    context_object_name = "bosses"
+    context_object_name = "monsters"
 
     queryset: QuerySet[Monster]
 
@@ -54,14 +54,14 @@ class KillstatMonitorView(BaseView):
                 for p in UserKillStatPreference.objects.filter(user=user)
             }
 
-        # 3. Calcula a predição para cada boss injetando dados de predição e preferências em cada objeto de boss
-        for boss in context["bosses"]:
-            boss.prediction = PredictionService.get_prediction(boss, world)
+        # 3. Calcula a predição para cada monstro injetando dados de predição e preferências em cada objeto de monstro
+        for monster in context["monsters"]:
+            monster.prediction = PredictionService.get_prediction(monster, world)
 
             # Extrai flags de preferência ou usa False como padrão
-            pref = user_prefs.get(boss.id)
-            boss.is_pinned = pref.is_pinned if pref else False
-            boss.is_low_priority = pref.is_low_priority if pref else False
+            pref = user_prefs.get(monster.id)
+            monster.is_pinned = pref.is_pinned if pref else False
+            monster.is_low_priority = pref.is_low_priority if pref else False
 
         # 4. Ordenação multinível usando preferêncis e Enum
         # 1. is_pinned (Topo)
@@ -69,8 +69,8 @@ class KillstatMonitorView(BaseView):
         # 3. Status Weight (Regras de Overdue/Expected/etc)
         # 4. Chance % (Maior primeiro)
         # 5. Nome (Alfabético)
-        context["bosses"] = sorted(
-            context["bosses"],
+        context["monsters"] = sorted(
+            context["monsters"],
             key=lambda b: (
                 not b.is_pinned,
                 b.is_low_priority,

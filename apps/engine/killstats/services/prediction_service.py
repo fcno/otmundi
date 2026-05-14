@@ -106,7 +106,7 @@ class PredictionService:
     def _calculate_chance(days: int, min_d: int, max_d: int) -> float:
         """
         Calcula a chance.
-        Retorna 0% se estiver antes da janela ou se o boss estiver MISSING.
+        Retorna 0% se estiver antes da janela ou se o monstro estiver MISSING.
         """
         # Se entrar no critério de MISSING (mais de 20% além do máximo), chance é 0
         if days > (max_d * 1.2):

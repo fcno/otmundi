@@ -20,28 +20,28 @@ else:
     CuratorBaseView = ListView
 
 
-class BossCuratorView(PermissionRequiredMixin, CuratorBaseView):
+class MonsterCuratorView(PermissionRequiredMixin, CuratorBaseView):
     """
     View para gestão e validação manual das janelas de spawn.
     """
 
     model = Monster
     template_name = "curator.html"
-    context_object_name = "bosses"
+    context_object_name = "monster"
     permission_required = "killstats.change_monsterconfig"
 
     def get_queryset(self) -> QuerySet[Monster]:
         """
-        Retorna apenas bosses ativos, consistente com o Monitor.
+        Retorna apenas monstros ativos, consistente com o Monitor.
         """
         return Monster.objects.filter(config__is_active=True).select_related("config")
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
 
-        # Injeta as sugestões calculadas pelo service em cada boss
-        for boss in context["bosses"]:
-            boss.suggestion = MonsterEventService.get_suggested_window(boss.id)
+        # Injeta as sugestões calculadas pelo service em cada monstro
+        for monster in context["monster"]:
+            monster.suggestion = MonsterEventService.get_suggested_window(monster.id)
 
         return context
 
@@ -66,4 +66,4 @@ class BossCuratorView(PermissionRequiredMixin, CuratorBaseView):
             first_error = str(next(iter(form.errors.values()))[0])
             messages.error(request, first_error)
 
-        return redirect("killstats:boss_curator")
+        return redirect("killstats:monster_curator")

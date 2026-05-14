@@ -20,7 +20,7 @@ def register_view(request: HttpRequest) -> HttpResponse:
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect("killstats:boss_monitor")
+            return redirect("killstats:monster_monitor")
     else:
         form = CustomUserCreationForm()
     return render(request, "users/register.html", {"form": form})
