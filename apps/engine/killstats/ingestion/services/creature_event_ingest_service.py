@@ -1,21 +1,21 @@
 from datetime import datetime
 
-from apps.engine.killstats.models.monster_spawn_event import MonsterSpawnEvent
-from apps.game_data.monsters.models.monster import Monster
+from apps.engine.killstats.models.creature_spawn_event import CreatureSpawnEvent
+from apps.game_data.creatures.models.creature import Creature
 from apps.game_data.worlds.models.world import World
 
 
-class MonsterEventIngestService:
+class CreatureEventIngestService:
     @staticmethod
     def create_event_from_ingestion(
-        monster: Monster, timestamp: datetime, world: World
-    ) -> MonsterSpawnEvent:
+        creature: Creature, timestamp: datetime, world: World
+    ) -> CreatureSpawnEvent:
         """
         Gera um evento de Spawn baseado em um registro de KillStat.
         Regra: Ingestion JSON é sempre um abate real (is_puff=False).
         """
-        return MonsterSpawnEvent(
-            monster=monster,
+        return CreatureSpawnEvent(
+            creature=creature,
             timestamp=timestamp,
             world=world,
             is_puff=False,  # Definido pela origem JSON

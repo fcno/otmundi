@@ -4,17 +4,17 @@ import pytest
 from django.db import IntegrityError, transaction
 
 from apps.engine.killstats.ingestion.dto import (
+    CreatureStatsDTO,
     KillStatsMetricDTO,
-    MonsterStatsDTO,
     WorldKillStatsDTO,
 )
 from apps.engine.killstats.ingestion.repositories.killstats_repository import (
     KillStatsRepository,
 )
+from apps.engine.killstats.models.creature_spawn_event import CreatureSpawnEvent
 from apps.engine.killstats.models.killstat import KillStat
-from apps.engine.killstats.models.monster_spawn_event import MonsterSpawnEvent
 from apps.engine.snapshots.models.snapshot import Snapshot
-from apps.game_data.monsters.models.monster import Monster
+from apps.game_data.creatures.models.creature import Creature
 from apps.game_data.worlds.models.world import World
 
 
@@ -35,11 +35,13 @@ class TestKillStatsRepository:
             world_name="Auroria",
             captured_at=captured_at,
             data=[
-                MonsterStatsDTO(
-                    monster="Dragon Lord",
-                    last_day=KillStatsMetricDTO(players_killed=10, monsters_killed=200),
+                CreatureStatsDTO(
+                    creature="Dragon Lord",
+                    last_day=KillStatsMetricDTO(
+                        players_killed=10, creatures_killed=200
+                    ),
                     last_7_days=KillStatsMetricDTO(
-                        players_killed=50, monsters_killed=1000
+                        players_killed=50, creatures_killed=1000
                     ),
                 )
             ],
@@ -59,11 +61,11 @@ class TestKillStatsRepository:
 
         # Assert - Tabela KillStat (Mapeamento de métricas)
         killstat = KillStat.objects.get(snapshot=snapshot)
-        assert killstat.monster.name == "dragon lord"
+        assert killstat.creature.name == "dragon lord"
         assert killstat.last_day_players_killed == 10
-        assert killstat.last_day_monsters_killed == 200
+        assert killstat.last_day_creatures_killed == 200
         assert killstat.last_7_days_players_killed == 50
-        assert killstat.last_7_days_monsters_killed == 1000
+        assert killstat.last_7_days_creatures_killed == 1000
 
     def test_atomic_rollback_on_unexpected_error(self) -> None:
         """
@@ -77,7 +79,7 @@ class TestKillStatsRepository:
             world_name="Zuna",
             captured_at=datetime.now(UTC),
             data=[
-                MonsterStatsDTO(
+                CreatureStatsDTO(
                     "Rat", KillStatsMetricDTO(0, 0), KillStatsMetricDTO(0, 0)
                 )
             ],
@@ -98,11 +100,11 @@ class TestKillStatsRepository:
         # O mundo Zuna também não deve existir (se foi criado na transação)
         assert World.objects.filter(name="zuna").exists() is False
         # Verificação Adicional: O evento também não deve existir
-        assert MonsterSpawnEvent.objects.count() == 0
+        assert CreatureSpawnEvent.objects.count() == 0
 
     def test_reuse_entities_prevents_duplication(self) -> None:
         """
-        Garante que entidades mestre (World e Monster) não sejam duplicadas
+        Garante que entidades mestre (World e Creature) não sejam duplicadas
         ao processar múltiplos snapshots para o mesmo cenário.
         """
         repo = KillStatsRepository()
@@ -114,7 +116,7 @@ class TestKillStatsRepository:
             world_name="Antica",
             captured_at=datetime(2026, 4, 20, tzinfo=UTC),
             data=[
-                MonsterStatsDTO(
+                CreatureStatsDTO(
                     "Dragon", KillStatsMetricDTO(1, 1), KillStatsMetricDTO(1, 1)
                 )
             ],
@@ -123,27 +125,27 @@ class TestKillStatsRepository:
 
         # Verificação intermediária para garantir o estado inicial
         assert World.objects.count() == 1
-        assert Monster.objects.count() == 1
+        assert Creature.objects.count() == 1
         assert Snapshot.objects.count() == 1
 
-        # --- SEGUNDO PROCESSAMENTO (Novo arquivo, mesmo mundo/monstro) ---
+        # --- SEGUNDO PROCESSAMENTO (Novo arquivo, mesmo mundo/criatura) ---
         dto_2 = WorldKillStatsDTO(
             snapshot_id="snapshot_tuesday",  # ID Diferente
             world_id="10",
             world_name="Antica",  # Mesmo Mundo
             captured_at=datetime(2026, 4, 21, tzinfo=UTC),
             data=[
-                MonsterStatsDTO(
+                CreatureStatsDTO(
                     "Dragon", KillStatsMetricDTO(2, 2), KillStatsMetricDTO(2, 2)
                 )
-            ],  # Mesmo Monstro
+            ],  # Mesma criatura
         )
         repo.save_world_kill_stats(dto_2, "tuesday.json")
 
         # --- ASSERÇÕES FINAIS ---
         # As entidades mestre devem continuar sendo únicas
         assert World.objects.count() == 1
-        assert Monster.objects.count() == 1
+        assert Creature.objects.count() == 1
 
         # Os fatos (Snapshots e KillStats) devem ser dois
         assert Snapshot.objects.count() == 2, "Deve haver 2 snapshots distintos."
@@ -157,19 +159,19 @@ class TestKillStatsRepository:
             snapshot__snapshot_id="snapshot_tuesday"
         ).exists()
 
-    def test_multiple_monsters_in_single_snapshot(self) -> None:
+    def test_multiple_creatures_in_single_snapshot(self) -> None:
         """Testa o comportamento do bulk_create com múltiplos registros."""
         repo = KillStatsRepository()
         dto = WorldKillStatsDTO(
-            snapshot_id="multi_monster",
+            snapshot_id="multi_creature",
             world_id="1",
             world_name="Antica",
             captured_at=datetime.now(UTC),
             data=[
-                MonsterStatsDTO(
+                CreatureStatsDTO(
                     "Rat", KillStatsMetricDTO(0, 0), KillStatsMetricDTO(0, 0)
                 ),
-                MonsterStatsDTO(
+                CreatureStatsDTO(
                     "Cave Rat", KillStatsMetricDTO(0, 0), KillStatsMetricDTO(0, 0)
                 ),
             ],
@@ -178,14 +180,14 @@ class TestKillStatsRepository:
         repo.save_world_kill_stats(dto)
 
         assert (
-            KillStat.objects.filter(snapshot__snapshot_id="multi_monster").count() == 2
+            KillStat.objects.filter(snapshot__snapshot_id="multi_creature").count() == 2
         )
-        assert Monster.objects.filter(name__in=["rat", "cave rat"]).count() == 2
+        assert Creature.objects.filter(name__in=["rat", "cave rat"]).count() == 2
 
     def test_save_world_kill_stats_creates_events(self) -> None:
         """
-        Garante que um MonsterSpawnEvent é criado automaticamente quando
-        há registro de monstros mortos no DTO.
+        Garante que um CreatureSpawnEvent é criado automaticamente quando
+        há registro de criaturas mortas no DTO.
         """
         repo = KillStatsRepository()
         captured_at = datetime(2026, 4, 20, 19, 32, tzinfo=UTC)
@@ -195,13 +197,13 @@ class TestKillStatsRepository:
             world_name="Antica",
             captured_at=captured_at,
             data=[
-                MonsterStatsDTO(
-                    monster="Orshabaal",
+                CreatureStatsDTO(
+                    creature="Orshabaal",
                     last_day=KillStatsMetricDTO(
-                        players_killed=0, monsters_killed=1
+                        players_killed=0, creatures_killed=1
                     ),  # Abate real
                     last_7_days=KillStatsMetricDTO(
-                        players_killed=10, monsters_killed=20
+                        players_killed=10, creatures_killed=20
                     ),
                 )
             ],
@@ -211,7 +213,7 @@ class TestKillStatsRepository:
 
         # Assert - Evento de Spawn
         # O evento deve existir, ser um abate real (is_puff=False) e ter a data correta
-        event = MonsterSpawnEvent.objects.get(monster__name="orshabaal")
+        event = CreatureSpawnEvent.objects.get(creature__name="orshabaal")
         assert event.world.name == "antica"
         assert event.is_puff is False  # Regra: Ingestão JSON = Abate
         assert event.timestamp == captured_at
@@ -219,7 +221,7 @@ class TestKillStatsRepository:
 
     def test_save_does_not_create_event_when_no_kills(self) -> None:
         """
-        Garante que NÃO é criado um MonsterSpawnEvent se monsters_killed for 0.
+        Garante que NÃO é criado um CreatureSpawnEvent se creatures_killed for 0.
         """
         repo = KillStatsRepository()
         dto = WorldKillStatsDTO(
@@ -228,8 +230,8 @@ class TestKillStatsRepository:
             world_name="Antica",
             captured_at=datetime.now(UTC),
             data=[
-                MonsterStatsDTO(
-                    monster="Rat",
+                CreatureStatsDTO(
+                    creature="Rat",
                     last_day=KillStatsMetricDTO(0, 0),  # Sem abates
                     last_7_days=KillStatsMetricDTO(0, 10),
                 )
@@ -240,12 +242,12 @@ class TestKillStatsRepository:
         repo.save_world_kill_stats(dto)
 
         # Assert
-        assert MonsterSpawnEvent.objects.filter(monster__name="rat").exists() is False
+        assert CreatureSpawnEvent.objects.filter(creature__name="rat").exists() is False
 
     def test_unique_constraint_collision_per_day_and_world(self) -> None:
         """
-        TESTE DE COLISÃO: Garante que o banco impede dois eventos para o
-        mesmo monstro, no mesmo dia e no mesmo mundo.
+        TESTE DE COLISÃO: Garante que o banco impede dois eventos para a
+        mesma criatura, no mesmo dia e no mesmo mundo.
         """
         repo = KillStatsRepository()
         day_one = datetime(2026, 4, 20, 10, 0, tzinfo=UTC)
@@ -259,7 +261,7 @@ class TestKillStatsRepository:
             world_name="Antica",
             captured_at=day_one,
             data=[
-                MonsterStatsDTO(
+                CreatureStatsDTO(
                     "Orshabaal", KillStatsMetricDTO(0, 1), KillStatsMetricDTO(0, 1)
                 )
             ],
@@ -271,7 +273,7 @@ class TestKillStatsRepository:
             world_name="Antica",
             captured_at=day_one_later,
             data=[
-                MonsterStatsDTO(
+                CreatureStatsDTO(
                     "Orshabaal", KillStatsMetricDTO(0, 1), KillStatsMetricDTO(0, 1)
                 )
             ],

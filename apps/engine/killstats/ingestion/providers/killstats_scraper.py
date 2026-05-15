@@ -7,11 +7,11 @@ from apps.core.providers.base_provider import BaseProvider
 
 class RawKillMetricDict(TypedDict):
     players_killed: int | str
-    monsters_killed: int | str
+    creatures_killed: int | str
 
 
-class RawMonsterDict(TypedDict):
-    monster: str
+class RawCreatureDict(TypedDict):
+    creature: str
     last_day: RawKillMetricDict
     last_7_days: RawKillMetricDict
 
@@ -25,7 +25,7 @@ class RawProviderInput(TypedDict):
     snapshot_id: str
     captured_at: str
     world: RawWorldDict
-    data: list[RawMonsterDict]
+    data: list[RawCreatureDict]
 
 
 # ===== PROVIDER OUTPUT (ainda não normalizado) =====
@@ -33,11 +33,11 @@ class RawProviderInput(TypedDict):
 
 class KillMetricDict(TypedDict):
     players_killed: int | str
-    monsters_killed: int | str
+    creatures_killed: int | str
 
 
-class MonsterDict(TypedDict):
-    monster: str
+class CreatureDict(TypedDict):
+    creature: str
     last_day: KillMetricDict
     last_7_days: KillMetricDict
 
@@ -47,7 +47,7 @@ class ProviderOutput(TypedDict):
     captured_at: str
     world_id: str
     world_name: str
-    data: list[MonsterDict]
+    data: list[CreatureDict]
 
 
 # ===== PROVIDER =====

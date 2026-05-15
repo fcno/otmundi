@@ -4,10 +4,10 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 
-class Monster(models.Model):
+class Creature(models.Model):
     class Meta:
-        verbose_name = _("monster")
-        verbose_name_plural = _("monsters")
+        verbose_name = _("creature")
+        verbose_name_plural = _("creatures")
 
     name = models.CharField(max_length=150, unique=True)
 

@@ -3,9 +3,9 @@ from datetime import timedelta
 import pytest
 from django.utils import timezone
 
-from apps.engine.killstats.models.monster_config import MonsterConfig
-from apps.engine.killstats.models.monster_spawn_event import MonsterSpawnEvent
-from apps.game_data.monsters.models import Monster
+from apps.engine.killstats.models.creature_config import CreatureConfig
+from apps.engine.killstats.models.creature_spawn_event import CreatureSpawnEvent
+from apps.game_data.creatures.models import Creature
 from apps.game_data.worlds.models.world import World
 
 
@@ -13,8 +13,8 @@ from apps.game_data.worlds.models.world import World
 class TestKillstatsSignals:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
-        self.monster = Monster.objects.create(name="gaz'haragoth")
-        MonsterConfig.objects.create(monster=self.monster, is_active=True)
+        self.creature = Creature.objects.create(name="gaz'haragoth")
+        CreatureConfig.objects.create(creature=self.creature, is_active=True)
         self.world = World.objects.create(name="ferobra")
         self.now = timezone.now()
 
@@ -24,18 +24,18 @@ class TestKillstatsSignals:
         sem intervenção manual.
         """
         # Evento 1: Há 20 dias
-        MonsterSpawnEvent.objects.create(
-            monster=self.monster,
+        CreatureSpawnEvent.objects.create(
+            creature=self.creature,
             world=self.world,
             timestamp=self.now - timedelta(days=20),
         )
         # Evento 2: Hoje (Gatilho)
-        MonsterSpawnEvent.objects.create(
-            monster=self.monster, world=self.world, timestamp=self.now
+        CreatureSpawnEvent.objects.create(
+            creature=self.creature, world=self.world, timestamp=self.now
         )
 
         # Verificamos se o Config foi criado e atualizado "sozinho"
-        config = MonsterConfig.objects.get(monster=self.monster)
+        config = CreatureConfig.objects.get(creature=self.creature)
         assert config.min_interval == 20
         assert config.max_interval == 20
 
@@ -45,17 +45,17 @@ class TestKillstatsSignals:
         O aprendizado deve ser baseado em NOVOS fatos (created=True).
         """
         # Criamos o cenário inicial
-        event = MonsterSpawnEvent.objects.create(
-            monster=self.monster,
+        event = CreatureSpawnEvent.objects.create(
+            creature=self.creature,
             world=self.world,
             timestamp=self.now - timedelta(days=10),
         )
-        MonsterSpawnEvent.objects.create(
-            monster=self.monster, world=self.world, timestamp=self.now
+        CreatureSpawnEvent.objects.create(
+            creature=self.creature, world=self.world, timestamp=self.now
         )
 
         # Forçamos um valor inicial no config
-        config = MonsterConfig.objects.get(monster=self.monster)
+        config = CreatureConfig.objects.get(creature=self.creature)
         config.min_interval = 10
         config.save()
 
@@ -67,31 +67,31 @@ class TestKillstatsSignals:
         config.refresh_from_db()
         assert config.min_interval == 10
 
-    def test_signal_with_multiple_monsters_isolation(self) -> None:
+    def test_signal_with_multiple_creatures_isolation(self) -> None:
         """
-        Garante que o evento de um monstro não afeta o metadado de outro.
+        Garante que o evento de uma criatura não afeta o metadado de outra.
         """
-        # 1. Criamos o monstro B com uma configuração específica
-        other_monster = Monster.objects.create(name="morgaroth")
-        other_config = MonsterConfig.objects.create(
-            monster=other_monster,
+        # 1. Criamos outra criatura com uma configuração específica
+        other_creature = Creature.objects.create(name="morgaroth")
+        other_config = CreatureConfig.objects.create(
+            creature=other_creature,
             is_active=True,
             min_interval=10,  # Valor para controle
             max_interval=20,
         )
 
-        # 2. Criamos um evento para o monstro A (self.monster)
+        # 2. Criamos um evento para a criatura original (self.creature)
         # Isso disparará sinais que poderiam tentar recalcular intervalos
-        MonsterSpawnEvent.objects.create(
-            monster=self.monster, world=self.world, timestamp=self.now
+        CreatureSpawnEvent.objects.create(
+            creature=self.creature, world=self.world, timestamp=self.now
         )
 
-        # 3. Verificamos se a config do monstro B continua EXATAMENTE igual
+        # 3. Verificamos se a config da outra criatura continua EXATAMENTE igual
         other_config.refresh_from_db()
         assert other_config.min_interval == 10
         assert other_config.max_interval == 20
         assert other_config.is_active is True
-        assert other_config.monster.name == "morgaroth"
+        assert other_config.creature.name == "morgaroth"
 
     def test_signal_learning_with_puff_events(self) -> None:
         """
@@ -99,8 +99,8 @@ class TestKillstatsSignals:
         para o aprendizado de intervalos.
         """
         # Evento 1: Um Puff há 11 dias
-        MonsterSpawnEvent.objects.create(
-            monster=self.monster,
+        CreatureSpawnEvent.objects.create(
+            creature=self.creature,
             world=self.world,
             timestamp=self.now - timedelta(days=11),
             is_puff=True,
@@ -108,9 +108,9 @@ class TestKillstatsSignals:
 
         # Evento 2: Uma Morte (Kill) hoje
         # O intervalo de 11 dias deve ser computado.
-        MonsterSpawnEvent.objects.create(
-            monster=self.monster, world=self.world, timestamp=self.now, is_puff=False
+        CreatureSpawnEvent.objects.create(
+            creature=self.creature, world=self.world, timestamp=self.now, is_puff=False
         )
 
-        config = MonsterConfig.objects.get(monster=self.monster)
+        config = CreatureConfig.objects.get(creature=self.creature)
         assert config.min_interval == 11

@@ -1,3 +1,3 @@
-from apps.engine.killstats.forms.monster_config_form import MonsterConfigForm
+from apps.engine.killstats.forms.creature_config_form import CreatureConfigForm
 
-__all__ = ["MonsterConfigForm"]
+__all__ = ["CreatureConfigForm"]

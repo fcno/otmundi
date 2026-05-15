@@ -12,8 +12,8 @@ from apps.core.validators.required import validate_required
 from apps.core.validators.strings import validate_string
 from apps.core.validators.unique import validate_unique
 from apps.engine.killstats.ingestion.dto import (
+    CreatureStatsDTO,
     KillStatsMetricDTO,
-    MonsterStatsDTO,
     WorldKillStatsDTO,
 )
 from apps.engine.killstats.ingestion.providers.killstats_scraper import (
@@ -76,20 +76,23 @@ class KillStatsIngestService:
             normalize_datetime,
         )
 
-        monsters: list[MonsterStatsDTO] = []
+        creatures: list[CreatureStatsDTO] = []
         for item in data["data"]:
-            monster = validate_and_normalize(
-                item["monster"],
-                [validate_required(field="monster"), validate_string(field="monster")],
+            creature = validate_and_normalize(
+                item["creature"],
+                [
+                    validate_required(field="creature"),
+                    validate_string(field="creature"),
+                ],
                 normalize_string,
             )
 
             last_day = item["last_day"]
             last_7_days = item["last_7_days"]
 
-            monsters.append(
-                MonsterStatsDTO(
-                    monster=monster,
+            creatures.append(
+                CreatureStatsDTO(
+                    creature=creature,
                     last_day=KillStatsMetricDTO(
                         players_killed=validate_and_normalize(
                             last_day["players_killed"],
@@ -99,11 +102,11 @@ class KillStatsIngestService:
                             ],
                             normalize_integer,
                         ),
-                        monsters_killed=validate_and_normalize(
-                            last_day["monsters_killed"],
+                        creatures_killed=validate_and_normalize(
+                            last_day["creatures_killed"],
                             [
-                                validate_required(field="monsters_killed"),
-                                validate_integer(field="monsters_killed"),
+                                validate_required(field="creatures_killed"),
+                                validate_integer(field="creatures_killed"),
                             ],
                             normalize_integer,
                         ),
@@ -117,11 +120,11 @@ class KillStatsIngestService:
                             ],
                             normalize_integer,
                         ),
-                        monsters_killed=validate_and_normalize(
-                            last_7_days["monsters_killed"],
+                        creatures_killed=validate_and_normalize(
+                            last_7_days["creatures_killed"],
                             [
-                                validate_required(field="monsters_killed"),
-                                validate_integer(field="monsters_killed"),
+                                validate_required(field="creatures_killed"),
+                                validate_integer(field="creatures_killed"),
                             ],
                             normalize_integer,
                         ),
@@ -134,7 +137,7 @@ class KillStatsIngestService:
             captured_at=captured_at,
             world_id=world_id,
             world_name=world_name,
-            data=monsters,
+            data=creatures,
         )
 
         # O Service entrega o DTO validado para o Repository salvar

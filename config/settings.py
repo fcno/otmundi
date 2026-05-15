@@ -44,7 +44,7 @@ LOCAL_APPS = [
     # Identity
     "apps.identity.users",
     # Game Data
-    "apps.game_data.monsters",
+    "apps.game_data.creatures",
     "apps.game_data.worlds",
     # Engine
     "apps.engine.killstats",

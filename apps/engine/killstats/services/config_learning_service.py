@@ -1,18 +1,20 @@
 from django.db.models import F, Window
 from django.db.models.functions import Lag
 
-from apps.engine.killstats.models.monster_config import MonsterConfig
-from apps.engine.killstats.models.monster_spawn_event import MonsterSpawnEvent
-from apps.game_data.monsters.models import Monster
+from apps.engine.killstats.models.creature_config import CreatureConfig
+from apps.engine.killstats.models.creature_spawn_event import CreatureSpawnEvent
+from apps.game_data.creatures.models import Creature
 
 
 class ConfigLearningService:
     @classmethod
-    def recalibrate_monster(cls, monster: Monster) -> None:
+    def recalibrate_creature(cls, creature: Creature) -> None:
         """Analisa o histórico completo e recalibra a janela global."""
         # 1. Calcula os deltas entre eventos consecutivos no mesmo mundo
         # Usamos Window Function para performance máxima no DB
-        annotated_events = MonsterSpawnEvent.objects.filter(monster=monster).annotate(
+        annotated_events = CreatureSpawnEvent.objects.filter(
+            creature=creature
+        ).annotate(
             prev_timestamp=Window(
                 expression=Lag("timestamp"),
                 partition_by=[F("world")],
@@ -30,12 +32,12 @@ class ConfigLearningService:
                     intervals.append(delta_days)
 
         if intervals:
-            cls._apply_config(monster, min(intervals), max(intervals))
+            cls._apply_config(creature, min(intervals), max(intervals))
 
     @staticmethod
-    def _apply_config(monster: Monster, observed_min: int, observed_max: int) -> None:
+    def _apply_config(creature: Creature, observed_min: int, observed_max: int) -> None:
         """Aplica os novos limites ao Config global."""
-        config, _ = MonsterConfig.objects.get_or_create(monster=monster)
+        config, _ = CreatureConfig.objects.get_or_create(creature=creature)
 
         updated = False
 
@@ -54,7 +56,7 @@ class ConfigLearningService:
 
     @classmethod
     def full_recalibration(cls) -> None:
-        """Recalibra todos os monstros usando iterator para segurança de memória."""
-        # O .iterator() evita carregar todos os monstros na RAM de uma vez
-        for monster in Monster.objects.all().iterator(chunk_size=100):
-            cls.recalibrate_monster(monster)
+        """Recalibra todas as criaturas usando iterator para segurança de memória."""
+        # O .iterator() evita carregar todas os criaturas na RAM de uma vez
+        for creature in Creature.objects.all().iterator(chunk_size=100):
+            cls.recalibrate_creature(creature)

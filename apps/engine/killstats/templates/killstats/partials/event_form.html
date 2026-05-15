@@ -26,15 +26,15 @@
         </div>
     {% endif %}
 
-    {# Campo: Monster #}
+    {# Campo: Creature #}
     <div class="form-control w-full">
         <label class="label">
-            <span class="label-text font-semibold">{{ form.monster.label }}</span>
+            <span class="label-text font-semibold">{{ form.creature.label }}</span>
         </label>
-        {{ form.monster }}
-        {% if form.monster.errors %}
+        {{ form.creature }}
+        {% if form.creature.errors %}
             <label class="label">
-                <span class="label-text-alt text-error">{{ form.monster.errors.0 }}</span>
+                <span class="label-text-alt text-error">{{ form.creature.errors.0 }}</span>
             </label>
         {% endif %}
     </div>

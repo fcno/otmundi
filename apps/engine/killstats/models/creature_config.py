@@ -3,20 +3,20 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from apps.game_data.monsters.models.monster import Monster
+from apps.game_data.creatures.models.creature import Creature
 
 
-class MonsterConfig(models.Model):
+class CreatureConfig(models.Model):
     """
-    Armazena os parâmetros de predição e configurações validadas para um monstro.
+    Armazena os parâmetros de predição e configurações validadas para uma criatura.
     Une o aprendizado automático (suggested) com a curadoria manual (confirmed).
     """
 
-    monster = models.OneToOneField(
-        Monster,
+    creature = models.OneToOneField(
+        Creature,
         on_delete=models.CASCADE,
         related_name="config",
-        verbose_name=_("monster"),
+        verbose_name=_("creature"),
     )
 
     # Restrição: Mínimo 1 dia via validador nativo
@@ -37,7 +37,7 @@ class MonsterConfig(models.Model):
     is_active = models.BooleanField(
         default=False,
         help_text=_(
-            "Defines whether the monster will be displayed on the monster monitor."
+            "Defines whether the creature will be displayed on the creature monitor."
         ),
     )
 
@@ -54,14 +54,14 @@ class MonsterConfig(models.Model):
 
     class Meta:
         app_label = "killstats"
-        verbose_name = _("monster config")
-        verbose_name_plural = _("monster configs")
+        verbose_name = _("creature config")
+        verbose_name_plural = _("creature configs")
 
     def __str__(self) -> str:
         status = _("Active") if self.is_active else _("Inactive")
         min_val = self.min_interval if self.min_interval is not None else "?"
         max_val = self.max_interval if self.max_interval is not None else "?"
 
-        return _("{status} | Config: {monster} ({min}-{max} days)").format(
-            status=status, monster=self.monster.name, min=min_val, max=max_val
+        return _("{status} | Config: {creature} ({min}-{max} days)").format(
+            status=status, creature=self.creature.name, min=min_val, max=max_val
         )

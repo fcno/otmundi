@@ -9,39 +9,39 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views.generic import ListView
 
-from apps.engine.killstats.forms.monster_config_form import MonsterConfigForm
-from apps.engine.killstats.models.monster_config import MonsterConfig
-from apps.engine.killstats.services.monster_event_service import MonsterEventService
-from apps.game_data.monsters.models import Monster
+from apps.engine.killstats.forms.creature_config_form import CreatureConfigForm
+from apps.engine.killstats.models.creature_config import CreatureConfig
+from apps.engine.killstats.services.creature_event_service import CreatureEventService
+from apps.game_data.creatures.models import Creature
 
 if TYPE_CHECKING:
-    CuratorBaseView = ListView[Monster]
+    CuratorBaseView = ListView[Creature]
 else:
     CuratorBaseView = ListView
 
 
-class MonsterCuratorView(PermissionRequiredMixin, CuratorBaseView):
+class CreatureCuratorView(PermissionRequiredMixin, CuratorBaseView):
     """
     View para gestão e validação manual das janelas de spawn.
     """
 
-    model = Monster
+    model = Creature
     template_name = "curator.html"
-    context_object_name = "monster"
-    permission_required = "killstats.change_monsterconfig"
+    context_object_name = "creature"
+    permission_required = "killstats.change_creatureconfig"
 
-    def get_queryset(self) -> QuerySet[Monster]:
+    def get_queryset(self) -> QuerySet[Creature]:
         """
-        Retorna apenas monstros ativos, consistente com o Monitor.
+        Retorna apenas criaturas ativas, consistente com o Monitor.
         """
-        return Monster.objects.filter(config__is_active=True).select_related("config")
+        return Creature.objects.filter(config__is_active=True).select_related("config")
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
 
-        # Injeta as sugestões calculadas pelo service em cada monstro
-        for monster in context["monster"]:
-            monster.suggestion = MonsterEventService.get_suggested_window(monster.id)
+        # Injeta as sugestões calculadas pelo service em cada criatura
+        for creature in context["creature"]:
+            creature.suggestion = CreatureEventService.get_suggested_window(creature.id)
 
         return context
 
@@ -49,14 +49,14 @@ class MonsterCuratorView(PermissionRequiredMixin, CuratorBaseView):
         """
         Processa a submissão manual dos intervalos de spawn.
         """
-        monster_id = request.POST.get("monster_id")
-        instance = MonsterConfig.objects.filter(monster_id=monster_id).first()
+        creature_id = request.POST.get("creature_id")
+        instance = CreatureConfig.objects.filter(creature_id=creature_id).first()
 
-        form = MonsterConfigForm(request.POST, instance=instance)
+        form = CreatureConfigForm(request.POST, instance=instance)
 
         if form.is_valid():
             config = form.save(commit=False)
-            config.monster_id = monster_id
+            config.creature_id = creature_id
             config.validated_at = timezone.now()
             config.validated_by = request.user
             config.save()
@@ -66,4 +66,4 @@ class MonsterCuratorView(PermissionRequiredMixin, CuratorBaseView):
             first_error = str(next(iter(form.errors.values()))[0])
             messages.error(request, first_error)
 
-        return redirect("killstats:monster_curator")
+        return redirect("killstats:creature_curator")

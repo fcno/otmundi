@@ -7,20 +7,22 @@ from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView
 
-from apps.engine.killstats.forms.monster_spawn_event_forms import MonsterSpawnEventForm
-from apps.engine.killstats.models.monster_spawn_event import MonsterSpawnEvent
+from apps.engine.killstats.forms.creature_spawn_event_forms import (
+    CreatureSpawnEventForm,
+)
+from apps.engine.killstats.models.creature_spawn_event import CreatureSpawnEvent
 
 if TYPE_CHECKING:
-    EventCreateBase = CreateView[MonsterSpawnEvent, MonsterSpawnEventForm]
+    EventCreateBase = CreateView[CreatureSpawnEvent, CreatureSpawnEventForm]
 else:
     EventCreateBase = CreateView
 
 
-class MonsterSpawnEventCreateView(PermissionRequiredMixin, EventCreateBase):
-    model = MonsterSpawnEvent
-    form_class = MonsterSpawnEventForm
+class CreatureSpawnEventCreateView(PermissionRequiredMixin, EventCreateBase):
+    model = CreatureSpawnEvent
+    form_class = CreatureSpawnEventForm
     template_name = "killstats/report_spawn.html"
-    permission_required = "killstats.add_monsterspawnevent"
+    permission_required = "killstats.add_creaturespawnevent"
     success_url = reverse_lazy("killstats:report_spawn")
 
     def form_valid(self, form: Any) -> HttpResponse:
@@ -32,7 +34,7 @@ class MonsterSpawnEventCreateView(PermissionRequiredMixin, EventCreateBase):
                 self.request,
                 "killstats/partials/event_form.html",
                 {
-                    "form": MonsterSpawnEventForm(),
+                    "form": CreatureSpawnEventForm(),
                     "success_message": _("Event registered successfully!"),
                 },
             )

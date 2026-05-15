@@ -3,23 +3,23 @@ from typing import Any
 
 from django.db.models import QuerySet
 
-from apps.engine.killstats.models.monster_spawn_event import MonsterSpawnEvent
-from apps.game_data.monsters.models import Monster
+from apps.engine.killstats.models.creature_spawn_event import CreatureSpawnEvent
+from apps.game_data.creatures.models import Creature
 from apps.game_data.worlds.models.world import World
 
 
-class MonsterEventService:
+class CreatureEventService:
     @staticmethod
     def create_manual_puff(
-        monster: Monster, timestamp: datetime, reported_by_id: int, world: World
-    ) -> MonsterSpawnEvent:
+        creature: Creature, timestamp: datetime, reported_by_id: int, world: World
+    ) -> CreatureSpawnEvent:
         """
         Caminho WEB: Cria um evento marcado como Puff.
         Regra: Via Web é sempre Puff.
         """
 
-        return MonsterSpawnEvent.objects.create(
-            monster=monster,
+        return CreatureSpawnEvent.objects.create(
+            creature=creature,
             timestamp=timestamp,
             world=world,
             is_puff=True,  # Definido pela origem WEB
@@ -44,12 +44,12 @@ class MonsterEventService:
         return intervals
 
     @classmethod
-    def get_suggested_window(cls, monster_id: int) -> dict[str, Any]:
+    def get_suggested_window(cls, creature_id: int) -> dict[str, Any]:
         """
         Orquestra a obtenção de dados e o cálculo da janela sugerida.
         """
         events: QuerySet[Any] = (
-            MonsterSpawnEvent.objects.filter(monster_id=monster_id)
+            CreatureSpawnEvent.objects.filter(creature_id=creature_id)
             .values("world_id", "timestamp")
             .order_by("world_id", "timestamp")
         )

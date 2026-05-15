@@ -5,30 +5,30 @@ from datetime import UTC, datetime
 import pytest
 
 from apps.engine.killstats.ingestion.dto import (
+    CreatureStatsDTO,
     KillStatsMetricDTO,
-    MonsterStatsDTO,
     WorldKillStatsDTO,
 )
 
 
 def test_killstats_metric_dto_all_fields() -> None:
-    dto = KillStatsMetricDTO(players_killed=1, monsters_killed=2)
+    dto = KillStatsMetricDTO(players_killed=1, creatures_killed=2)
 
     assert dto.players_killed == 1
-    assert dto.monsters_killed == 2
+    assert dto.creatures_killed == 2
 
 
-def test_monster_stats_dto_all_fields() -> None:
+def test_creature_stats_dto_all_fields() -> None:
     last_day = KillStatsMetricDTO(1, 2)
     last_7_days = KillStatsMetricDTO(3, 4)
 
-    dto = MonsterStatsDTO(
-        monster="dragon",
+    dto = CreatureStatsDTO(
+        creature="dragon",
         last_day=last_day,
         last_7_days=last_7_days,
     )
 
-    assert dto.monster == "dragon"
+    assert dto.creature == "dragon"
     assert dto.last_day is last_day
     assert dto.last_7_days is last_7_days
 
@@ -37,8 +37,8 @@ def test_world_killstats_dto_all_fields() -> None:
     dt = datetime(2026, 1, 1, tzinfo=UTC)
 
     data = [
-        MonsterStatsDTO(
-            monster="dragon",
+        CreatureStatsDTO(
+            creature="dragon",
             last_day=KillStatsMetricDTO(1, 2),
             last_7_days=KillStatsMetricDTO(3, 4),
         )
@@ -61,7 +61,7 @@ def test_world_killstats_dto_all_fields() -> None:
 
 
 def test_dto_is_immutable() -> None:
-    dto = KillStatsMetricDTO(players_killed=1, monsters_killed=2)
+    dto = KillStatsMetricDTO(players_killed=1, creatures_killed=2)
 
     with pytest.raises(dataclasses.FrozenInstanceError):
         dto.players_killed = 10  # type: ignore[misc]

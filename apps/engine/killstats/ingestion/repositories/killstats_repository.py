@@ -1,13 +1,13 @@
 from django.db import transaction
 
 from apps.engine.killstats.ingestion.dto import WorldKillStatsDTO
-from apps.engine.killstats.ingestion.services.monster_event_ingest_service import (
-    MonsterEventIngestService,
+from apps.engine.killstats.ingestion.services.creature_event_ingest_service import (
+    CreatureEventIngestService,
 )
+from apps.engine.killstats.models.creature_spawn_event import CreatureSpawnEvent
 from apps.engine.killstats.models.killstat import KillStat
-from apps.engine.killstats.models.monster_spawn_event import MonsterSpawnEvent
 from apps.engine.snapshots.models.snapshot import Snapshot
-from apps.game_data.monsters.models.monster import Monster
+from apps.game_data.creatures.models.creature import Creature
 from apps.game_data.worlds.models.world import World
 
 
@@ -33,30 +33,30 @@ class KillStatsRepository:
                 source_file=source_file,
             )
 
-            # 3. Preparação das estatísticas de monstros
+            # 3. Preparação das estatísticas das criaturas
             kill_stats_to_create = []
             events_to_create = []
 
             for item in dto.data:
-                # Recupera ou cria o monstro (Normalização feita no Model)
-                monster, _ = Monster.objects.get_or_create(name=item.monster.lower())
+                # Recupera ou cria a criatura (Normalização feita no Model)
+                creature, _ = Creature.objects.get_or_create(name=item.creature.lower())
 
                 ks = KillStat(
                     snapshot=snapshot,
-                    monster=monster,
+                    creature=creature,
                     last_day_players_killed=item.last_day.players_killed,
-                    last_day_monsters_killed=item.last_day.monsters_killed,
+                    last_day_creatures_killed=item.last_day.creatures_killed,
                     last_7_days_players_killed=item.last_7_days.players_killed,
-                    last_7_days_monsters_killed=item.last_7_days.monsters_killed,
+                    last_7_days_creatures_killed=item.last_7_days.creatures_killed,
                 )
 
                 kill_stats_to_create.append(ks)
 
                 # REGRA: Se houve abates, preparamos o evento de spawn
-                if item.last_day.monsters_killed > 0:
+                if item.last_day.creatures_killed > 0:
                     events_to_create.append(
-                        MonsterEventIngestService.create_event_from_ingestion(
-                            monster, snapshot.captured_at, world
+                        CreatureEventIngestService.create_event_from_ingestion(
+                            creature, snapshot.captured_at, world
                         )
                     )
 
@@ -64,6 +64,6 @@ class KillStatsRepository:
             KillStat.objects.bulk_create(kill_stats_to_create)
 
             if events_to_create:
-                MonsterSpawnEvent.objects.bulk_create(events_to_create)
+                CreatureSpawnEvent.objects.bulk_create(events_to_create)
 
             return snapshot

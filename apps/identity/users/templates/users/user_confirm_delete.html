@@ -6,5 +6,5 @@
 <form method="post">
     {% csrf_token %}
     <button type="submit">{% translate "Confirm Deactivation" %}</button>
-    <a href="{% url 'killstats:monster_monitor' %}">{% translate "Cancel" %}</a>
+    <a href="{% url 'killstats:creature_monitor' %}">{% translate "Cancel" %}</a>
 </form>

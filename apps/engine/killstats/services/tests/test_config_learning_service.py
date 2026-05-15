@@ -3,12 +3,12 @@ from datetime import timedelta
 import pytest
 from django.utils import timezone
 
-from apps.engine.killstats.models.monster_config import MonsterConfig
-from apps.engine.killstats.models.monster_spawn_event import MonsterSpawnEvent
+from apps.engine.killstats.models.creature_config import CreatureConfig
+from apps.engine.killstats.models.creature_spawn_event import CreatureSpawnEvent
 from apps.engine.killstats.services.config_learning_service import (
     ConfigLearningService,
 )
-from apps.game_data.monsters.models.monster import Monster
+from apps.game_data.creatures.models.creature import Creature
 from apps.game_data.worlds.models.world import World
 
 
@@ -16,18 +16,18 @@ from apps.game_data.worlds.models.world import World
 class TestConfigLearningService:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
-        self.monster = Monster.objects.create(name="ferumbras")
-        MonsterConfig.objects.create(monster=self.monster, is_active=True)
+        self.creature = Creature.objects.create(name="ferumbras")
+        CreatureConfig.objects.create(creature=self.creature, is_active=True)
         self.world_a = World.objects.create(name="antica")
         self.world_b = World.objects.create(name="belobra")
         self.now = timezone.now()
 
     def _create_event(
-        self, world: World, days_ago: int, monster: Monster | None = None
+        self, world: World, days_ago: int, creature: Creature | None = None
     ) -> None:
-        target_monster = monster or self.monster
-        MonsterSpawnEvent.objects.create(
-            monster=target_monster,
+        target_creature = creature or self.creature
+        CreatureSpawnEvent.objects.create(
+            creature=target_creature,
             world=world,
             timestamp=self.now - timedelta(days=days_ago),
         )
@@ -42,36 +42,36 @@ class TestConfigLearningService:
         self._create_event(self.world_b, 0)
         self._create_event(self.world_b, 12)
 
-        ConfigLearningService.recalibrate_monster(self.monster)
+        ConfigLearningService.recalibrate_creature(self.creature)
 
-        config = MonsterConfig.objects.get(monster=self.monster)
+        config = CreatureConfig.objects.get(creature=self.creature)
         assert config.min_interval == 12
         assert config.max_interval == 15
 
     def test_config_dynamic_creation(self) -> None:
-        """Verifica se o serviço cria o MonsterConfig se ele não existir ao recalibrar."""
-        # 1. Criamos um monstro novo que NÃO tem config (não usamos o self.monster)
-        new_monster = Monster.objects.create(name="ghazbaran")
+        """Verifica se o serviço cria o CreatureConfig se ele não existir ao recalibrar."""
+        # 1. Criamos uma criatura nova que NÃO tem config (não usamos o self.creature)
+        new_creature = Creature.objects.create(name="ghazbaran")
 
-        # Garantimos que ele nasceu sem config
-        assert not MonsterConfig.objects.filter(monster=new_monster).exists()
+        # Garantimos que ela nasceu sem config
+        assert not CreatureConfig.objects.filter(creature=new_creature).exists()
 
-        # 2. Simulamos eventos para este monstro novo
-        MonsterSpawnEvent.objects.create(
-            monster=new_monster, world=self.world_a, timestamp=self.now
+        # 2. Simulamos eventos para esta criatura nova
+        CreatureSpawnEvent.objects.create(
+            creature=new_creature, world=self.world_a, timestamp=self.now
         )
-        MonsterSpawnEvent.objects.create(
-            monster=new_monster,
+        CreatureSpawnEvent.objects.create(
+            creature=new_creature,
             world=self.world_a,
             timestamp=self.now - timedelta(days=10),
         )
 
         # 3. O serviço deve detectar a ausência e criar a config automaticamente
-        ConfigLearningService.recalibrate_monster(new_monster)
+        ConfigLearningService.recalibrate_creature(new_creature)
 
         # 4. Verificação final
-        assert MonsterConfig.objects.filter(monster=new_monster).exists()
-        config = MonsterConfig.objects.get(monster=new_monster)
+        assert CreatureConfig.objects.filter(creature=new_creature).exists()
+        config = CreatureConfig.objects.get(creature=new_creature)
         assert (
             config.is_active is False
         )  # Por padrão, criação dinâmica deve ser inativa
@@ -79,7 +79,7 @@ class TestConfigLearningService:
     def test_no_regression_on_wider_knowledge(self) -> None:
         """Garante que o conhecimento não 'encolha' se dados novos forem menos extremos."""
         # 1. Em vez de criar, pegamos a config que o setup já criou
-        config = MonsterConfig.objects.get(monster=self.monster)
+        config = CreatureConfig.objects.get(creature=self.creature)
         config.min_interval = 5
         config.max_interval = 20
         config.is_active = True
@@ -90,7 +90,7 @@ class TestConfigLearningService:
         self._create_event(self.world_a, 10)
 
         # 3. Recalibramos
-        ConfigLearningService.recalibrate_monster(self.monster)
+        ConfigLearningService.recalibrate_creature(self.creature)
 
         # 4. Verificamos se os valores CONFIRMADOS (5 e 20) foram preservados
         config.refresh_from_db()
@@ -98,24 +98,26 @@ class TestConfigLearningService:
         assert config.max_interval == 20
 
     def test_full_recalibration_batch(self) -> None:
-        """Testa o processamento em lote para todos os monstros."""
-        monster2 = Monster.objects.create(name="orshabaal")
-        MonsterConfig.objects.create(monster=monster2, is_active=True)
+        """Testa o processamento em lote para todas as criaturas."""
+        creature2 = Creature.objects.create(name="orshabaal")
+        CreatureConfig.objects.create(creature=creature2, is_active=True)
         self._create_event(self.world_a, 0)  # Ferumbras
         self._create_event(self.world_a, 10)
 
-        # Monster 2: Intervalo de 7 dias
-        MonsterSpawnEvent.objects.create(
-            monster=monster2, world=self.world_a, timestamp=self.now
+        # creature 2: Intervalo de 7 dias
+        CreatureSpawnEvent.objects.create(
+            creature=creature2, world=self.world_a, timestamp=self.now
         )
-        MonsterSpawnEvent.objects.create(
-            monster=monster2, world=self.world_a, timestamp=self.now - timedelta(days=7)
+        CreatureSpawnEvent.objects.create(
+            creature=creature2,
+            world=self.world_a,
+            timestamp=self.now - timedelta(days=7),
         )
 
         ConfigLearningService.full_recalibration()
 
-        assert MonsterConfig.objects.get(monster=self.monster).min_interval == 10
-        assert MonsterConfig.objects.get(monster=monster2).min_interval == 7
+        assert CreatureConfig.objects.get(creature=self.creature).min_interval == 10
+        assert CreatureConfig.objects.get(creature=creature2).min_interval == 7
 
     def test_cold_start_behavior(self) -> None:
         """
@@ -123,23 +125,23 @@ class TestConfigLearningService:
         1. Primeira kill: Não cria metadados (falta de dados comparativos).
         2. Segunda kill: Cria metadados com min/max idênticos.
         """
-        # 1. Criamos um monstro novo sem NENHUMA config vinculada
-        cold_monster = Monster.objects.create(name="ferumbras-cold-start")
+        # 1. Criamos uma criatura nova sem NENHUMA config vinculada
+        cold_creature = Creature.objects.create(name="ferumbras-cold-start")
 
         # 1. Primeira Kill (20 dias atrás)
-        self._create_event(self.world_a, 20, monster=cold_monster)
-        ConfigLearningService.recalibrate_monster(cold_monster)
+        self._create_event(self.world_a, 20, creature=cold_creature)
+        ConfigLearningService.recalibrate_creature(cold_creature)
 
         # Sem dois eventos, não há intervalo, logo não há config.
-        assert not MonsterConfig.objects.filter(monster=cold_monster).exists()
+        assert not CreatureConfig.objects.filter(creature=cold_creature).exists()
 
         # 2. Segunda Kill
-        self._create_event(self.world_a, 0, monster=cold_monster)
-        ConfigLearningService.recalibrate_monster(cold_monster)
+        self._create_event(self.world_a, 0, creature=cold_creature)
+        ConfigLearningService.recalibrate_creature(cold_creature)
 
         # Verificação final
-        assert MonsterConfig.objects.filter(monster=cold_monster).exists()
-        config = MonsterConfig.objects.get(monster=cold_monster)
+        assert CreatureConfig.objects.filter(creature=cold_creature).exists()
+        config = CreatureConfig.objects.get(creature=cold_creature)
 
         # O único intervalo observado entre as duas kills é de 20 dias
         assert config.min_interval == 20

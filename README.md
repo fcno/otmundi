@@ -1,6 +1,6 @@
 # 🌍 Otmundi - Backend
 
-Sistema de monitoramento e ingestão de dados para mundos e monstros (Open Tibia), desenvolvido com foco em estabilidade técnica, padronização de código e arquitetura resiliente.
+Sistema de monitoramento e ingestão de dados para mundos e criaturas (Open Tibia), desenvolvido com foco em estabilidade técnica, padronização de código e arquitetura resiliente.
 
 ## 🎯 Objetivo do Projeto
 
@@ -144,7 +144,7 @@ cz commit
 Para evitar conflitos de namespace e garantir a escalabilidade, todos os aplicativos residem no diretório `apps/` e devem ser referenciados via imports absolutos:
 
 * **apps/engine**: Lógica de ingestão de dados, processamento de `killstats`, aprendizado das configurações e a interface de Curadoria.
-* **apps/game_data**: Definições centrais do domínio, como Monstros e Mundos.
+* **apps/game_data**: Definições centrais do domínio, como Criaturas e Mundos.
 * **apps/identity**: Gestão de usuários, autenticação e preferências.
 * **apps/core**: Helpers de sanitização, validadores base, utilitários de tradução e exceções customizadas.
 * **apps/snapshots**: Registro histórico e estados temporais do jogo.

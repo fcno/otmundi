@@ -19,12 +19,12 @@ def test_sanitize_recursive_dict() -> None:
     payload = {
         "name": "  Dragon Lord  ",
         "empty_info": "   ",
-        "config": {"title": "  MONSTER  ", "description": ""},
+        "config": {"title": "  CREATURE  ", "description": ""},
     }
     expected = {
         "name": "Dragon Lord",
         "empty_info": None,
-        "config": {"title": "MONSTER", "description": None},
+        "config": {"title": "CREATURE", "description": None},
     }
     assert sanitize_data(payload) == expected
 
@@ -57,8 +57,8 @@ def test_sanitize_complex_payload_killstats() -> None:
         "world": {"id": " 11 ", "name": " Auroria  "},
         "data": [
             {
-                "monster": " Dragon ",
-                "last_day": {"players_killed": " 5 ", "monsters_killed": 0},
+                "creature": " Dragon ",
+                "last_day": {"players_killed": " 5 ", "creatures_killed": 0},
             }
         ],
     }
@@ -66,8 +66,8 @@ def test_sanitize_complex_payload_killstats() -> None:
         "world": {"id": "11", "name": "Auroria"},
         "data": [
             {
-                "monster": "Dragon",
-                "last_day": {"players_killed": "5", "monsters_killed": 0},
+                "creature": "Dragon",
+                "last_day": {"players_killed": "5", "creatures_killed": 0},
             }
         ],
     }

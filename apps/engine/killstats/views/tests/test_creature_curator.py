@@ -4,37 +4,41 @@ from django.contrib.auth.models import Permission
 from django.test import Client
 from django.urls import reverse
 
-from apps.engine.killstats.models.monster_config import MonsterConfig
-from apps.game_data.monsters.models import Monster
+from apps.engine.killstats.models.creature_config import CreatureConfig
+from apps.game_data.creatures.models import Creature
 
 User = get_user_model()
 
 
 @pytest.mark.django_db
-class TestMonsterCuratorView:
+class TestCreatureCuratorView:
     @pytest.fixture(autouse=True)
     def setup(self, client: Client) -> None:
         self.client = client
-        self.user = User.objects.create_user(username="curator_monster", password="123")
-        self.monster = Monster.objects.create(name="ghazbaran")
+        self.user = User.objects.create_user(
+            username="curator_creature", password="123"
+        )
+        self.creature = Creature.objects.create(name="ghazbaran")
         # Config inicial ativa
-        self.config = MonsterConfig.objects.create(monster=self.monster, is_active=True)
-        self.url = reverse("killstats:monster_curator")
+        self.config = CreatureConfig.objects.create(
+            creature=self.creature, is_active=True
+        )
+        self.url = reverse("killstats:creature_curator")
 
     def test_curator_access_denied_without_permission(self) -> None:
-        """403 para usuários sem a permissão killstats.change_monsterconfig."""
+        """403 para usuários sem a permissão killstats.change_creatureconfig."""
         self.client.force_login(self.user)
         response = self.client.get(self.url)
         assert response.status_code == 403
 
     def test_curator_post_success_and_audit_fields(self) -> None:
         """Valida se o POST salva corretamente e registra QUEM e QUANDO."""
-        perm = Permission.objects.get(codename="change_monsterconfig")
+        perm = Permission.objects.get(codename="change_creatureconfig")
         self.user.user_permissions.add(perm)
         self.client.force_login(self.user)
 
         payload = {
-            "monster_id": self.monster.id,
+            "creature_id": self.creature.id,
             "min_interval": 2,
             "max_interval": 4,
             "is_active": False,
@@ -42,7 +46,7 @@ class TestMonsterCuratorView:
         response = self.client.post(self.url, payload)
 
         assert response.status_code == 302
-        config = MonsterConfig.objects.get(monster=self.monster)
+        config = CreatureConfig.objects.get(creature=self.creature)
         assert config.min_interval == 2
         assert config.max_interval == 4
         assert config.validated_by == self.user
@@ -51,12 +55,16 @@ class TestMonsterCuratorView:
 
     def test_curator_post_error_message_display(self) -> None:
         """Valida que a mensagem de erro do formulário é repassada para o context do Django."""
-        perm = Permission.objects.get(codename="change_monsterconfig")
+        perm = Permission.objects.get(codename="change_creatureconfig")
         self.user.user_permissions.add(perm)
         self.client.force_login(self.user)
 
         # Envio de Min > Max
-        payload = {"monster_id": self.monster.id, "min_interval": 10, "max_interval": 2}
+        payload = {
+            "creature_id": self.creature.id,
+            "min_interval": 10,
+            "max_interval": 2,
+        }
         response = self.client.post(self.url, payload, follow=True)
 
         messages = list(response.context["messages"])

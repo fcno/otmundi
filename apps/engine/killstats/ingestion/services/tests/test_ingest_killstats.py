@@ -23,9 +23,9 @@ def build_valid_payload() -> dict[str, Any]:
         "world": {"id": "11", "name": "Auroria"},
         "data": [
             {
-                "monster": "Dragon Lord",
-                "last_day": {"players_killed": 10, "monsters_killed": 200},
-                "last_7_days": {"players_killed": 50, "monsters_killed": 1000},
+                "creature": "Dragon Lord",
+                "last_day": {"players_killed": 10, "creatures_killed": 200},
+                "last_7_days": {"players_killed": 50, "creatures_killed": 1000},
             }
         ],
     }
@@ -53,11 +53,11 @@ class TestKillStatsIngestService:
         kill_stat: KillStat | None = snapshot.kill_stats.first()
         assert kill_stat is not None
 
-        assert kill_stat.monster.name == "dragon lord"
+        assert kill_stat.creature.name == "dragon lord"
         assert kill_stat.last_day_players_killed == 10
-        assert kill_stat.last_day_monsters_killed == 200
+        assert kill_stat.last_day_creatures_killed == 200
         assert kill_stat.last_7_days_players_killed == 50
-        assert kill_stat.last_7_days_monsters_killed == 1000
+        assert kill_stat.last_7_days_creatures_killed == 1000
 
     def test_ingest_normalization_and_trim(
         self, service: KillStatsIngestService
@@ -65,14 +65,14 @@ class TestKillStatsIngestService:
         """Valida se o trim e lower funcionam em múltiplos níveis."""
         payload = build_valid_payload()
         payload["world"]["name"] = "   AURORIA   "
-        payload["data"][0]["monster"] = "   DRAGON LORD   "
+        payload["data"][0]["creature"] = "   DRAGON LORD   "
 
         snapshot = service.ingest(payload)
 
         kill_stat = snapshot.kill_stats.first()
         assert kill_stat is not None
         assert snapshot.world.name == "auroria"
-        assert kill_stat.monster.name == "dragon lord"
+        assert kill_stat.creature.name == "dragon lord"
 
     @pytest.mark.parametrize(
         "path, invalid_value",
@@ -80,7 +80,7 @@ class TestKillStatsIngestService:
             (["snapshot_id"], None),
             (["world", "id"], None),
             (["captured_at"], "data-invalida"),
-            (["data", 0, "monster"], ""),
+            (["data", 0, "creature"], ""),
         ],
     )
     def test_ingest_validation_integrity(

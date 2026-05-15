@@ -1,7 +1,7 @@
 [project]
 name = "otmundi"
 version = "0.1.0"
-description = "Projeto Django para monitoramento de mundos e monstros"
+description = "Projeto Django para monitoramento de mundos e criaturas"
 requires-python = ">=3.12"
 dependencies = [
     "django>=5.0",

@@ -5,8 +5,8 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from apps.engine.killstats.models.monster_spawn_event import MonsterSpawnEvent
-from apps.game_data.monsters.models import Monster
+from apps.engine.killstats.models.creature_spawn_event import CreatureSpawnEvent
+from apps.game_data.creatures.models import Creature
 from apps.game_data.worlds.models.world import World
 
 
@@ -46,12 +46,12 @@ class PredictionResult(TypedDict):
 
 class PredictionService:
     @classmethod
-    def get_prediction(cls, monster: Monster, world: World) -> PredictionResult:
+    def get_prediction(cls, creature: Creature, world: World) -> PredictionResult:
         """
         Calcula a predição de spawn baseada no histórico local e janelas globais.
         """
-        last_event = cls._get_last_event(monster, world)
-        config = getattr(monster, "config", None)
+        last_event = cls._get_last_event(creature, world)
+        config = getattr(creature, "config", None)
 
         min_days = config.min_interval if config else None
         max_days = config.max_interval if config else None
@@ -81,10 +81,10 @@ class PredictionService:
         )
 
     @staticmethod
-    def _get_last_event(monster: Monster, world: World) -> MonsterSpawnEvent | None:
+    def _get_last_event(creature: Creature, world: World) -> CreatureSpawnEvent | None:
         """Busca o evento mais recente de spawn."""
         return (
-            MonsterSpawnEvent.objects.filter(monster=monster, world=world)
+            CreatureSpawnEvent.objects.filter(creature=creature, world=world)
             .order_by("-timestamp")
             .first()
         )
@@ -106,7 +106,7 @@ class PredictionService:
     def _calculate_chance(days: int, min_d: int, max_d: int) -> float:
         """
         Calcula a chance.
-        Retorna 0% se estiver antes da janela ou se o monstro estiver MISSING.
+        Retorna 0% se estiver antes da janela ou se a criatura estiver MISSING.
         """
         # Se entrar no critério de MISSING (mais de 20% além do máximo), chance é 0
         if days > (max_d * 1.2):
@@ -127,7 +127,7 @@ class PredictionService:
 
     @staticmethod
     def _build_result(
-        event: MonsterSpawnEvent | None,
+        event: CreatureSpawnEvent | None,
         min_d: int | None,
         max_d: int | None,
         chance: float,

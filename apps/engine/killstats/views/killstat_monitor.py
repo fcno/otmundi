@@ -7,29 +7,29 @@ from apps.engine.killstats.services.prediction_service import (
     PredictionService,
     PredictionStatus,
 )
-from apps.game_data.monsters.models import Monster
+from apps.game_data.creatures.models import Creature
 from apps.game_data.worlds.models.world import World
 
-# Esta lógica faz com que o mypy veja ListView[Monster],
+# Esta lógica faz com que o mypy veja ListView[Creature],
 # mas o Python em execução veja apenas ListView.
 if TYPE_CHECKING:
-    BaseView = ListView[Monster]
+    BaseView = ListView[Creature]
 else:
     BaseView = ListView
 
 
 class KillstatMonitorView(BaseView):
-    model = Monster
+    model = Creature
     template_name = "monitor.html"
-    context_object_name = "monsters"
+    context_object_name = "creatures"
 
-    queryset: QuerySet[Monster]
+    queryset: QuerySet[Creature]
 
-    def get_queryset(self) -> QuerySet[Monster]:
+    def get_queryset(self) -> QuerySet[Creature]:
         """
-        Retorna apenas os monstros marcados explicitamente para exibição, consistente com o curator.
+        Retorna apenas as criaturas marcados explicitamente para exibição, consistente com o curator.
         """
-        return Monster.objects.filter(config__is_active=True)
+        return Creature.objects.filter(config__is_active=True)
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
@@ -50,18 +50,18 @@ class KillstatMonitorView(BaseView):
             )
 
             user_prefs = {
-                p.monster_id: p
+                p.creature_id: p
                 for p in UserKillStatPreference.objects.filter(user=user)
             }
 
-        # 3. Calcula a predição para cada monstro injetando dados de predição e preferências em cada objeto de monstro
-        for monster in context["monsters"]:
-            monster.prediction = PredictionService.get_prediction(monster, world)
+        # 3. Calcula a predição para cada criatura injetando dados de predição e preferências em cada objeto de criatura
+        for creature in context["creatures"]:
+            creature.prediction = PredictionService.get_prediction(creature, world)
 
             # Extrai flags de preferência ou usa False como padrão
-            pref = user_prefs.get(monster.id)
-            monster.is_pinned = pref.is_pinned if pref else False
-            monster.is_low_priority = pref.is_low_priority if pref else False
+            pref = user_prefs.get(creature.id)
+            creature.is_pinned = pref.is_pinned if pref else False
+            creature.is_low_priority = pref.is_low_priority if pref else False
 
         # 4. Ordenação multinível usando preferêncis e Enum
         # 1. is_pinned (Topo)
@@ -69,8 +69,8 @@ class KillstatMonitorView(BaseView):
         # 3. Status Weight (Regras de Overdue/Expected/etc)
         # 4. Chance % (Maior primeiro)
         # 5. Nome (Alfabético)
-        context["monsters"] = sorted(
-            context["monsters"],
+        context["creatures"] = sorted(
+            context["creatures"],
             key=lambda b: (
                 not b.is_pinned,
                 b.is_low_priority,

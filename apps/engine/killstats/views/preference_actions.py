@@ -4,26 +4,26 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
 
 from apps.engine.killstats.models.user_preference import UserKillStatPreference
-from apps.game_data.monsters.models import Monster
+from apps.game_data.creatures.models import Creature
 
 
 @login_required
 @require_POST
-def toggle_monster_preference(request: HttpRequest) -> JsonResponse:
+def toggle_creature_preference(request: HttpRequest) -> JsonResponse:
     """
     Alterna preferências de exibição com exclusão mútua condicional.
     """
 
     assert request.user.is_authenticated
 
-    monster_id = request.POST.get("monster_id")
+    creature_id = request.POST.get("creature_id")
     action = request.POST.get("action")  # "pin" ou "low_priority"
 
-    monster = get_object_or_404(Monster, id=monster_id)
+    creature = get_object_or_404(Creature, id=creature_id)
 
-    # Busca ou cria a preferência para este usuário e monstro
+    # Busca ou cria a preferência para este usuário e criatura
     pref, _ = UserKillStatPreference.objects.get_or_create(
-        user=request.user, monster=monster
+        user=request.user, creature=creature
     )
 
     if action == "pin":

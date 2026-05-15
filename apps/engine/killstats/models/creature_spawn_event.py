@@ -5,32 +5,32 @@ from django.db.models.functions import TruncDate
 from django.db.models.manager import Manager
 from django.utils.translation import gettext_lazy as _
 
-from apps.game_data.monsters.models.monster import Monster
+from apps.game_data.creatures.models.creature import Creature
 from apps.game_data.worlds.models.world import World
 
 
-class MonsterSpawnEvent(models.Model):
+class CreatureSpawnEvent(models.Model):
     """
-    Registra um evento que reinicia a janela de spawn de um monstro.
+    Registra um evento que reinicia a janela de spawn de uma criatura.
     Pode ser uma morte (via sistema) ou um 'Puff' (via usuário).
     """
 
-    objects: Manager["MonsterSpawnEvent"] = Manager()
+    objects: Manager["CreatureSpawnEvent"] = Manager()
 
-    monster = models.ForeignKey(
-        Monster,
+    creature = models.ForeignKey(
+        Creature,
         on_delete=models.CASCADE,
         related_name="spawn_events",
-        verbose_name=_("monster"),
+        verbose_name=_("creature"),
     )
     timestamp = models.DateTimeField(
         _("event timestamp"),
-        help_text=_("The exact moment the monster died or puffed."),
+        help_text=_("The exact moment the creature died or puffed."),
     )
     is_puff = models.BooleanField(
         _("is puff"),
         default=False,
-        help_text=_("True if the monster despawned without being killed."),
+        help_text=_("True if the creature despawned without being killed."),
     )
     reported_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -51,18 +51,18 @@ class MonsterSpawnEvent(models.Model):
 
     class Meta:
         app_label = "killstats"
-        verbose_name = _("monster spawn event")
-        verbose_name_plural = _("monster spawn events")
+        verbose_name = _("creature spawn event")
+        verbose_name_plural = _("creature spawn events")
         ordering = ["-timestamp"]
 
         constraints = [
             UniqueConstraint(
                 TruncDate("timestamp"),
-                "monster",
+                "creature",
                 "world",
-                name="unique_monster_spawn_per_day_per_world",
+                name="unique_creature_spawn_per_day_per_world",
                 violation_error_message=_(
-                    "This monster already has an event registered for this day on this world."
+                    "This creature already has an event registered for this day on this world."
                 ),
             )
         ]
@@ -70,8 +70,8 @@ class MonsterSpawnEvent(models.Model):
     def __str__(self) -> str:
         # Forçamos a conversão para string para garantir que o .format() receba o tipo correto
         event_type: str = str(_("Puff") if self.is_puff else _("Kill"))
-        return _("{monster} - {event_type} @ {timestamp} ({world})").format(
-            monster=str(self.monster.name),
+        return _("{creature} - {event_type} @ {timestamp} ({world})").format(
+            creature=str(self.creature.name),
             event_type=event_type,
             timestamp=self.timestamp.date().isoformat() if self.timestamp else "",
             world=str(self.world.name),
